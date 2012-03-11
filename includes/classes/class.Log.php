@@ -47,12 +47,10 @@ class Log
         return isset($this->data[$key]);
     }
 	function save() {
-		global $db;
 		$data = serialize(array($this->data['old'], $this->data['new']));
 		$uni = ($this->data['universe'] == NULL ? $this->data['uni'] : $this->data['universe']);
-		//var_dump($this->data['target']);
-		$db->query("INSERT INTO ".LOG." (`id`,`mode`,`admin`,`target`,`time`,`data`,`universe`) VALUES 
-		(NULL , ".$db->sql_escape($this->data['mode']).", ".$db->sql_escape($this->data['admin']).", '".$db->sql_escape($this->data['target'])."', ".TIMESTAMP." , '".$db->sql_escape($data)."', '".$uni."');");
+		$GLOBALS['DATABASE']->query("INSERT INTO ".LOG." (`id`,`mode`,`admin`,`target`,`time`,`data`,`universe`) VALUES 
+		(NULL , ".$GLOBALS['DATABASE']->sql_escape($this->data['mode']).", ".$GLOBALS['DATABASE']->sql_escape($this->data['admin']).", '".$GLOBALS['DATABASE']->sql_escape($this->data['target'])."', ".TIMESTAMP." , '".$GLOBALS['DATABASE']->sql_escape($data)."', '".$uni."');");
 	}
 }
 

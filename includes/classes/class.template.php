@@ -31,19 +31,27 @@ require(ROOT_PATH.'includes/libs/Smarty/Smarty.class.php');
 		
 class template extends Smarty
 {
+	protected $window	= 'full';
+	protected $jsscript	= array();
+	protected $script	= array();
+	
 	function __construct()
 	{	
 		parent::__construct();
-		$this->force_compile 		= false;
-		$this->caching 				= false;
-		$this->compile_check		= true; #Set false for production!
-		$this->jsscript				= array();
-		$this->script				= array();
-		$this->compile_dir			= is_writable(ROOT_PATH.'cache/') ? ROOT_PATH.'cache/' : $this->getTempPath();
+		$this->smartySettings();
+	}
+	
+	function smartySettings()
+	{	
+		$this->force_compile 			= false;
+		$this->caching 					= false; #Set true for production!
+		$this->merge_compiled_includes	= true;
+		$this->compile_check			= true; #Set false for production!
+		$this->php_handling				= Smarty::PHP_REMOVE;
+		
+		$this->setCompileDir(is_writable(ROOT_PATH.'cache/') ? ROOT_PATH.'cache/' : $this->getTempPath());
+		$this->setCacheDir(ROOT_PATH.'cache/templates');
 		$this->setTemplateDir(ROOT_PATH.'styles/templates/');
-		$this->php_handling			= Smarty::PHP_QUOTE;#Smarty::PHP_REMOVE;
-		$this->Popup				= false;
-		$this->Dialog				= false;
 		#$this->loadFilter('output', 'trimwhitespace');
 	}
 	
@@ -64,123 +72,9 @@ class template extends Smarty
 		return BasicFileUtil::getTempFolder();
 	}
 		
-	public function assign_vars(array $var = array()) 
+	public function assign_vars($var, $nocache = true) 
 	{		
-		parent::assign($var);
-	}
-	
-	private function Menus()
-	{
-		global $PLANET, $LNG, $USER, $CONF, $resource, $db;
-		
-		//PlanetMenu
-		if(isset($USER['PLANETS']))
-			$USER['PLANETS']	= getPlanets($USER);
-		
-		if($PLANET[$resource[43]] > 0)
-			$this->loadscript("gate.js");
-		
-		$this->loadscript("topnav.js");
-		$this->loadscript("planetmenu.js");
-		$this->phpself	= "?page=".request_var('page', '')."&amp;mode=".request_var('mode', '');
-		$PlanetSelect	= array();
-		$Scripttime		= array();
-		foreach($USER['PLANETS'] as $CurPlanetID => $PlanetQuery)
-		{
-			if(!empty($PlanetQuery['b_building_id']))
-			{
-				$QueueArray						= unserialize($PlanetQuery['b_building_id']);
-				foreach($QueueArray as $ListIDArray)
-				{
-					if($ListIDArray[3] > TIMESTAMP)
-						$Scripttime[$PlanetQuery['id']][]	= $ListIDArray[3] - TIMESTAMP;
-				}
-			}
-			$Planetlist[$PlanetQuery['id']]	= array(
-				'url'		=> $this->phpself."&amp;cp=".$PlanetQuery['id'],
-				'name'		=> $PlanetQuery['name'].(($PlanetQuery['planet_type'] == 3) ? " (".$LNG['fcm_moon'].")":""),
-				'image'		=> $PlanetQuery['image'],
-				'galaxy'	=> $PlanetQuery['galaxy'],
-				'system'	=> $PlanetQuery['system'],
-				'planet'	=> $PlanetQuery['planet'],
-				'ptype'		=> $PlanetQuery['planet_type'],
-			);
-			
-			$PlanetSelect[$this->phpself."&amp;cp=".$PlanetQuery['id']]	= $PlanetQuery['name'].(($PlanetQuery['planet_type'] == 3) ? " (" . $LNG['fcm_moon'] . ")":"")."&nbsp;[".$PlanetQuery['galaxy'].":".$PlanetQuery['system'].":".$PlanetQuery['planet']."]&nbsp;&nbsp;";
-		}
-		
-		if($USER['urlaubs_modus'] == 1) {
-			$CONF['metal_basic_income']     = 0;
-			$CONF['crystal_basic_income']   = 0;
-			$CONF['deuterium_basic_income'] = 0;
-		}
-		
-		$this->assign_vars(array(	
-			'PlanetMenu' 		=> $Planetlist,
-			'show_planetmenu' 	=> $LNG['show_planetmenu'],
-			'current_pid'		=> $PLANET['id'],
-			'Scripttime'		=> json_encode($Scripttime),	
-			'new_message' 		=> $USER['messages'],
-			'forum_url'			=> $CONF['forum_url'],
-			'topnav'			=> true,
-			'metal'				=> $PLANET['metal'],
-			'crystal'			=> $PLANET['crystal'],
-			'deuterium'			=> $PLANET['deuterium'],
-			'energy'			=> (($PLANET['energy'] + $PLANET['energy_used']) < 0) ? colorRed(shortly_number($PLANET['energy'] + $PLANET['energy_used']).'/'.shortly_number($PLANET['energy'])) : shortly_number($PLANET['energy'] + $PLANET['energy_used']) . '/' . shortly_number($PLANET['energy']),
-			'energy_alt'		=> pretty_number($PLANET['energy'] + $PLANET['energy_used']).'/'.pretty_number($PLANET['energy']),
-			'darkmatter'		=> $USER['darkmatter'],
-			'metal_max'			=> $PLANET['metal_max'],
-			'crystal_max'		=> $PLANET['crystal_max'],
-			'deuterium_max' 	=> $PLANET['deuterium_max'],
-			'js_metal_max'		=> floattostring($PLANET['metal_max']),
-			'js_crystal_max'	=> floattostring($PLANET['crystal_max']),
-			'js_deuterium_max' 	=> floattostring($PLANET['deuterium_max']),
-			'js_metal_hr'		=> $PLANET['planet_type'] == 1 ? floattostring($PLANET['metal_perhour'] + $CONF['metal_basic_income'] * $CONF['resource_multiplier']) : 0,
-			'js_crystal_hr'		=> $PLANET['planet_type'] == 1 ? floattostring($PLANET['crystal_perhour'] + $CONF['crystal_basic_income'] * $CONF['resource_multiplier']) : 0,
-			'js_deuterium_hr'	=> $PLANET['planet_type'] == 1 ? floattostring($PLANET['deuterium_perhour'] + $CONF['deuterium_basic_income'] * $CONF['resource_multiplier']) : 0,
-			'current_planet'	=> $this->phpself."&amp;cp=".$PLANET['id'],
-			'tn_vacation_mode'	=> $LNG['tn_vacation_mode'],
-			'closed'			=> !$CONF['game_disable'] ? $LNG['ov_closed'] : false,
-			'vacation'			=> $USER['urlaubs_modus'] ? tz_date($USER['urlaubs_until']) : false,
-			'delete'			=> $USER['db_deaktjava'] ? sprintf($LNG['tn_delete_mode'], tz_date($USER['db_deaktjava'] + ($CONF['del_user_manually'] * 86400))) : false,
-			'image'				=> $PLANET['image'],
-			'settings_tnstor'	=> $USER['settings_tnstor'],
-			'PlanetSelect'		=> $PlanetSelect,
-			'Metal'				=> $LNG['tech'][901],
-			'Crystal'			=> $LNG['tech'][902],
-			'Deuterium'			=> $LNG['tech'][903],
-			'Darkmatter'		=> $LNG['tech'][921],
-			'Energy'			=> $LNG['tech'][911],
-			'class'				=> 'normal',
-		));
-	}
-	
-    private function main()
-    {
-		global $USER, $CONF, $LANG, $LNG, $THEME;
-        $this->assign_vars(array(
-            'title'				=> $CONF['game_name'],
-            'uni_name'			=> $CONF['uni_name'],
-            'dpath'				=> $THEME->getTheme(),
-            'vmode'				=> $USER['urlaubs_modus'],
-            'is_pmenu'			=> $USER['settings_planetmenu'],
-			'authlevel'			=> $USER['authlevel'],
-            'lang'    			=> $LANG->getUser(),
-            'ready'    			=> $LNG['ready'],
-			'date'				=> explode("|", date('Y\|n\|j\|G\|i\|s\|Z', TIMESTAMP)),
-			'cron'				=> GetCrons(),
-			'ga_active'			=> $CONF['ga_active'],
-			'ga_key'			=> $CONF['ga_key'],
-			'debug'				=> $CONF['debug'],
-			'fcm_info'			=> $LNG['fcm_info'],
-			'VERSION'			=> $CONF['VERSION'],
-			'REV'				=> substr($CONF['VERSION'], -4),
-			'js_tdformat'		=> $LNG['js_tdformat'],
-			'week_day'			=> json_encode($LNG['week_day']),
-			'months' 			=> json_encode($LNG['months']),
-			'TimeZone' 			=> ($USER['timezone'] + $USER['dst']) * 3600,
-			'Offset'			=> tz_diff(),
-		));
+		parent::assign($var, NULL, $nocache);
 	}
 	
 	private function adm_main()
@@ -204,74 +98,50 @@ class template extends Smarty
 			'fb_active'			=> $CONF['fb_on'],
 			'fb_key' 			=> $CONF['fb_apikey'],
 			'mail_active'		=> $CONF['mail_active'],
-			'forum' 			=> $LNG['forum'],
-			'register_closed'	=> $LNG['register_closed'],
-			'fb_perm'			=> sprintf($LNG['fb_perm'], $CONF['game_name']),
-			'menu_index'		=> $LNG['menu_index'],
-			'menu_news'			=> $LNG['menu_news'],
-			'menu_rules'		=> $LNG['menu_rules'],
-			'menu_pranger'		=> $LNG['menu_pranger'],
-			'menu_top100'		=> $LNG['menu_top100'],
-			'menu_disclamer'	=> $LNG['menu_disclamer'],
 			'game_captcha'		=> $CONF['capaktiv'],
 			'reg_close'			=> $CONF['reg_closed'],
 			'ref_active'		=> $CONF['ref_active'],
 			'ga_active'			=> $CONF['ga_active'],
 			'ga_key'			=> $CONF['ga_key'],
-			'getajax'			=> request_var('getajax', 0),
+			'getajax'			=> HTTP::_GP('getajax', 0),
 			'lang'				=> $LANG->getUser(),
 			'UNI'				=> $UNI,
 			'VERSION'			=> $CONF['VERSION'],
 			'REV'				=> substr($CONF['VERSION'], -4),
-			'langs'				=> json_encode(Language::getAllowedLangs(false)),			
+			'langs'				=> json_encode(Language::getAllowedLangs(false)),
 			'htaccess'			=> (int) (UNIS_HTACCESS === true),
 		));
 	}
-		
-	public function isPopup()
-	{	
-		$this->assign_vars(array(
-			'class'			=> 'popup',
-		));	
-		$this->Popup		= true;
-	}
-		
-	public function isDialog()
-	{
-		$this->Dialog		= true;
-	}
-		
+	
 	public function show($file)
 	{		
-		global $USER, $PLANET, $CONF, $LNG, $db, $THEME;
+		global $USER, $PLANET, $CONF, $LNG, $THEME, $LANG;
 
 		if($THEME->isCustomTPL($file))
-			$this->template_dir	= $THEME->getTemplatePath();
+			$this->setTemplateDir($THEME->getTemplatePath());
 			
 		$tplDir	= $this->getTemplateDir();
 			
-		if(defined('INSTALL')) {
+		if(MODE === 'INSTALL') {
 			$this->setTemplateDir($tplDir[0].'install/');
-		} elseif(defined('IN_ADMIN')) {
+		} elseif(MODE === 'ADMIN') {
 			$this->setTemplateDir($tplDir[0].'adm/');
 			$this->adm_main();
-		} elseif(defined('LOGIN')) {
+		} elseif(MODE === 'INDEX') {
 			$this->setTemplateDir($tplDir[0].'index/');
 			$this->login_main();
-		} elseif(!$this->Dialog) {
-			if(!defined('AJAX')) {
-				$_SESSION['USER']	= $USER;
-				$_SESSION['PLANET']	= $PLANET;
-			}
-			$this->main();
-			if($this->Popup === false)
-				$this->Menus();
 		}
 
 		$this->assign_vars(array(
-			'scripts'			=> $this->jsscript,
-			'execscript'		=> implode("\n", $this->script),
+			'scripts'		=> $this->jsscript,
+			'execscript'	=> implode("\n", $this->script),
 		));
+
+		$this->assign_vars(array(
+			'LNG'			=> $LNG,
+		), false);
+		
+		$this->compile_id	= $LANG->getUser();
 		
 		parent::display($file);
 	}
@@ -287,8 +157,6 @@ class template extends Smarty
 	public function message($mes, $dest = false, $time = 3, $Fatal = false)
 	{
 		global $LNG, $THEME;
-		if($Fatal)
-			$this->isPopup(true);
 	
 		$this->assign_vars(array(
 			'mes'		=> $mes,
@@ -300,6 +168,17 @@ class template extends Smarty
 		$this->gotoside($dest, $time);
 		$this->show('error_message_body.tpl');
 	}
+	
+	public static function printMessage($Message, $fullSide = true, $redirect = NULL) {
+		$template	= new self;
+		if(!isset($redirect)) {
+			$redirect	= array(false, 0);
+		}
+		
+		$template->message($Message, $redirect[0], $redirect[1], !$fullSide);
+		exit;
+	}
+	
     /**
     * Workaround  for new Smarty Method to add custom props...
     */
@@ -324,7 +203,7 @@ class template extends Smarty
     public function __set($name, $value)
     {
         $allowed = array(
-        'template_dir' => 'setTemplateDir',
+        'template_dir' => 'setTemplateDirgetTemplateDir',
         'config_dir' => 'setConfigDir',
         'plugins_dir' => 'setPluginsDir',
         'compile_dir' => 'setCompileDir',

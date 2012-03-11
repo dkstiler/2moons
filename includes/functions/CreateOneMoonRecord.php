@@ -27,60 +27,58 @@
  * @link http://code.google.com/p/2moons/
  */
 
-if(!defined('INSIDE')) die('Hacking attempt!');
+function CreateOneMoonRecord($Galaxy, $System, $Planet, $Universe, $Owner, $MoonID, $MoonName, $Chance, $Size = 0)
+{
+	global $LNG, $USER;
 
-	function CreateOneMoonRecord($Galaxy, $System, $Planet, $Universe, $Owner, $MoonID, $MoonName, $Chance, $Size = 0)
-	{
-		global $LNG, $USER, $db;
+	$SQL  = "SELECT id_luna,planet_type,id,name,temp_max,temp_min FROM ".PLANETS." ";
+	$SQL .= "WHERE ";
+	$SQL .= "universe = '".$Universe."' AND ";
+	$SQL .= "galaxy = '".$Galaxy."' AND ";
+	$SQL .= "system = '".$System."' AND ";
+	$SQL .= "planet = '".$Planet."' AND ";
+	$SQL .= "planet_type = '1';";
+	$MoonPlanet = $GLOBALS['DATABASE']->uniquequery($SQL);
 
-		$SQL  = "SELECT id_luna,planet_type,id,name,temp_max,temp_min FROM ".PLANETS." ";
-		$SQL .= "WHERE ";
-		$SQL .= "universe = '".$Universe."' AND ";
-		$SQL .= "galaxy = '".$Galaxy."' AND ";
-		$SQL .= "system = '".$System."' AND ";
-		$SQL .= "planet = '".$Planet."' AND ";
-		$SQL .= "planet_type = '1';";
-		$MoonPlanet = $db->uniquequery($SQL);
+	if ($MoonPlanet['id_luna'] != 0)
+		return false;
 
-		if ($MoonPlanet['id_luna'] != 0)
-			return false;
-
-		if($Size == 0) {
-			$size	= floor(pow(mt_rand(10, 20) + 3 * $Chance, 0.5) * 1000); # New Calculation - 23.04.2011
-		} else {
-			$size	= $Size;
-		}
-		
-		$maxtemp	= $MoonPlanet['temp_max'] - mt_rand(10, 45);
-		$mintemp	= $MoonPlanet['temp_min'] - mt_rand(10, 45);
-
-		$db->multi_query("INSERT INTO ".PLANETS." SET
-						  name = '".$MoonName."',
-						  id_owner = ".$Owner.",
-						  universe = ".$Universe.",
-						  galaxy = ".$Galaxy.",
-						  system = ".$System.",
-						  planet = ".$Planet.",
-						  last_update = ".TIMESTAMP.",
-						  planet_type = '3',
-						  image = 'mond',
-						  diameter = ".$size.",
-						  field_max = '1',
-						  temp_min = ".$mintemp.",
-						  temp_max = ".$maxtemp.",
-						  metal = 0,
-						  metal_perhour = 0,
-						  crystal = 0,
-						  crystal_perhour = 0,
-						  deuterium = 0,
-						  deuterium_perhour = 0;
-						  SET @moonID = LAST_INSERT_ID();
-						  UPDATE ".PLANETS." SET
-						  id_luna = @moonID
-						  WHERE
-						  id = ".$MoonPlanet['id'].";");
-
-		return $MoonPlanet['name'];
+	if($Size == 0) {
+		$size	= floor(pow(mt_rand(10, 20) + 3 * $Chance, 0.5) * 1000); # New Calculation - 23.04.2011
+	} else {
+		$size	= $Size;
 	}
+	
+	$maxtemp	= $MoonPlanet['temp_max'] - mt_rand(10, 45);
+	$mintemp	= $MoonPlanet['temp_min'] - mt_rand(10, 45);
+
+	$GLOBALS['DATABASE']->multi_query("INSERT INTO ".PLANETS." SET
+					  name = '".$MoonName."',
+					  id_owner = ".$Owner.",
+					  universe = ".$Universe.",
+					  galaxy = ".$Galaxy.",
+					  system = ".$System.",
+					  planet = ".$Planet.",
+					  last_update = ".TIMESTAMP.",
+					  planet_type = '3',
+					  image = 'mond',
+					  diameter = ".$size.",
+					  field_max = '1',
+					  temp_min = ".$mintemp.",
+					  temp_max = ".$maxtemp.",
+					  metal = 0,
+					  metal_perhour = 0,
+					  crystal = 0,
+					  crystal_perhour = 0,
+					  deuterium = 0,
+					  deuterium_perhour = 0;
+					  SET @moonID = LAST_INSERT_ID();
+					  UPDATE ".PLANETS." SET
+					  id_luna = @moonID
+					  WHERE
+					  id = ".$MoonPlanet['id'].";");
+
+	return $MoonPlanet['name'];
+}
 
 ?>

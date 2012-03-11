@@ -31,19 +31,19 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowActivePage()
 {
-	global $LNG, $db, $USER;
-	$id = request_var('id', 0);
+	global $LNG, $USER;
+	$id = HTTP::_GP('id', 0);
 	if($_GET['action'] == 'delete' && !empty($id))
-		$db->query("DELETE FROM ".USERS_VALID." WHERE `id` = '".$id."' AND `universe` = '".$_SESSION['adminuni']."';");
+		$GLOBALS['DATABASE']->query("DELETE FROM ".USERS_VALID." WHERE `id` = '".$id."' AND `universe` = '".$_SESSION['adminuni']."';");
 
-	$query = $db->query("SELECT * FROM ".USERS_VALID." WHERE `universe` = '".$_SESSION['adminuni']."' ORDER BY id ASC");
+	$query = $GLOBALS['DATABASE']->query("SELECT * FROM ".USERS_VALID." WHERE `universe` = '".$_SESSION['adminuni']."' ORDER BY id ASC");
 
 	$Users	= array();
-	while ($User = $db->fetch_array($query)) {
+	while ($User = $GLOBALS['DATABASE']->fetch_array($query)) {
 		$Users[]	= array(
 			'id'		=> $User['id'],
 			'name'		=> $User['username'],
-			'date'		=> tz_date($User['date']),
+			'date'		=> _date($LNG['php_tdformat'], $User['date'], $USER['timezone']),
 			'email'		=> $User['email'],
 			'ip'		=> $User['ip'],
 			'password'	=> $User['password'],
@@ -51,7 +51,8 @@ function ShowActivePage()
 		);
 	}
 
-	$template	= new template();
+	$template	= new template();
+
 	$template->assign_vars(array(	
 		'Users'				=> $Users,
 		'uni'				=> $_SESSION['adminuni'],

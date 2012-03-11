@@ -30,7 +30,7 @@
 if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FILE__))) exit;
 
 function ShowTeamspeakPage() {
-	global $CONF, $LNG, $USER, $db;
+	global $CONF, $LNG, $USER;
 
 	if ($_POST)
 	{
@@ -47,14 +47,14 @@ function ShowTeamspeakPage() {
 		);
 		
 		$CONF['ts_modon'] 			= isset($_POST['ts_on']) && $_POST['ts_on'] == 'on' ? 1 : 0;		
-		$CONF['ts_server']			= request_var('ts_ip', '');
-		$CONF['ts_tcpport']			= request_var('ts_tcp', 0);
-		$CONF['ts_udpport']			= request_var('ts_udp', 0);
-		$CONF['ts_timeout']			= request_var('ts_to', 0);
-		$CONF['ts_version']			= request_var('ts_v', 0);
-		$CONF['ts_login']			= request_var('ts_login', '');
-		$CONF['ts_password']		= request_var('ts_password', '', true);
-		$CONF['ts_cron_interval']	= request_var('ts_cron', 0);
+		$CONF['ts_server']			= HTTP::_GP('ts_ip', '');
+		$CONF['ts_tcpport']			= HTTP::_GP('ts_tcp', 0);
+		$CONF['ts_udpport']			= HTTP::_GP('ts_udp', 0);
+		$CONF['ts_timeout']			= HTTP::_GP('ts_to', 0);
+		$CONF['ts_version']			= HTTP::_GP('ts_v', 0);
+		$CONF['ts_login']			= HTTP::_GP('ts_login', '');
+		$CONF['ts_password']		= HTTP::_GP('ts_password', '', true);
+		$CONF['ts_cron_interval']	= HTTP::_GP('ts_cron', 0);
 		
 		$config_after = array(
 			'ts_timeout'		=> $CONF['ts_timeout'],

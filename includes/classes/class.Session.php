@@ -43,6 +43,7 @@ class Session
 		ini_set('session.bug_compat_42', '0');
 		ini_set('session.cookie_httponly', true);
 		
+		//session_set_cookie_params(SESSION_LIFETIME, HTTP_ROOT, HTTP_HOST, HTTPS, true);
 		session_set_cookie_params(SESSION_LIFETIME, HTTP_ROOT, NULL, HTTPS, true);
 		session_cache_limiter('nocache');
 		session_name('2Moons');
@@ -50,32 +51,34 @@ class Session
 	
 	function IsUserLogin()
 	{
-		#if(session_status() === PHP_SESSION_NONE) # 5.4.0
-		if(!isset($_SESSION))
+		if(!isset($_SESSION)) {
 			session_start();
+		}
 		return !empty($_SESSION['id']);
 	}
 	
 	function GetSessionFromDB()
 	{
-		global $db;
-		return $db->uniquequery("SELECT * FROM ".SESSION." WHERE `sess_id` = '".session_id()."' AND `user_id` = '".$_SESSION['id']."';");
+		return $GLOBALS['DATABASE']->uniquequery("SELECT * FROM ".SESSION." WHERE sessionID = '".session_id()."' AND userID = ".$_SESSION['id'].";");
 	}
 	
 	function ErrorMessage($Code)
 	{
-		redirectTo('index.php?code='.$Code);
+		HTTP::redirectTo('index.php?code='.$Code);
 	}
 	
 	function CreateSession($ID, $Username, $MainPlanet, $Universe, $Authlevel = 0, $dpath = DEFAULT_THEME)
 	{
-		global $db;
-		#if(session_status() === PHP_SESSION_NONE) # 5.4.0
-		if(!isset($_SESSION))
+		if(!isset($_SESSION)) {
 			session_start();
-			
+		}
+		
 		$Path					= $this->GetPath();
-		$db->query("INSERT INTO ".SESSION." (`sess_id`, `user_id`, `user_ip`, `user_side`, `user_lastactivity`) VALUES ('".session_id()."', '".$ID."', '".$_SERVER['REMOTE_ADDR']."', '".$db->sql_escape($Path)."', '".TIMESTAMP."') ON DUPLICATE KEY UPDATE `sess_id` = '".session_id()."', `user_id` = '".$ID."', `user_ip` = '".$_SERVER['REMOTE_ADDR']."', `user_side` = '".$db->sql_escape($Path)."';");
+		$GLOBALS['DATABASE']->query("REPLACE INTO ".SESSION." SET
+		sessionID = '".session_id()."',
+		userID = ".$ID.",
+		lastonline = ".TIMESTAMP.",
+		userIP = '".$_SERVER['REMOTE_ADDR']."';");
 		$_SESSION['id']			= $ID;
 		$_SESSION['username']	= $Username;
 		$_SESSION['authlevel']	= $Authlevel;	
@@ -93,34 +96,31 @@ class Session
 	
 	function UpdateSession()
 	{
-		global $CONF, $db;
+		global $CONF;
 		
-		if(request_var('ajax', 0) == 1)
+		if(HTTP::_GP('ajax', 0) == 1)
 			return true;
 			
 		$_SESSION['last']	= $this->GetSessionFromDB();
-		if(empty($_SESSION['last']) || !$this->CompareIPs($_SESSION['last']['user_ip'])) {
+		if(empty($_SESSION['last']) || !$this->CompareIPs($_SESSION['last']['userIP'])) {
 			$this->DestroySession();
 			$this->ErrorMessage(2);
 		}
 		
-		$SelectPlanet  		= request_var('cp',0);
+		$SelectPlanet  		= HTTP::_GP('cp',0);
 		if(!empty($SelectPlanet))
-			$IsPlanetMine 	=	$db->uniquequery("SELECT `id` FROM ".PLANETS." WHERE `id` = '".$SelectPlanet."' AND `id_owner` = '".$_SESSION['id']."';");
+			$IsPlanetMine 	=	$GLOBALS['DATABASE']->uniquequery("SELECT id FROM ".PLANETS." WHERE id = '".$SelectPlanet."' AND id_owner = '".$_SESSION['id']."';");
 			
 		$_SESSION['path']		= $this->GetPath();
 		$_SESSION['planet']		= !empty($IsPlanetMine['id']) ? $IsPlanetMine['id'] : $_SESSION['planet'];
 
-		$SQL  = "UPDATE ".USERS." as u, ".SESSION." as s SET ";
-		$SQL .= "u.`onlinetime` = '".TIMESTAMP."', ";
-		$SQL .= "u.`user_lastip` = '".$_SERVER['REMOTE_ADDR'] ."', ";
-		$SQL .= "s.`user_ip` = '".$_SERVER['REMOTE_ADDR']."', ";
-		$SQL .= "s.`user_side` = '".$db->sql_escape($_SESSION['path'])."', ";
-		$SQL .= "s.`user_lastactivity` = '".TIMESTAMP."' ";
-		$SQL .= "WHERE ";
-		$SQL .= "u.`id` = '".$_SESSION['id']."' AND s.`sess_id` = '".session_id()."';";
-		$db->query($SQL);
-		
+		$GLOBALS['DATABASE']->query("UPDATE ".USERS.", ".SESSION." SET 
+		onlinetime = ".TIMESTAMP.",
+		lastonline = ".TIMESTAMP.",
+		user_lastip = '".$_SERVER['REMOTE_ADDR']."',
+		userIP = '".$_SERVER['REMOTE_ADDR']."'
+		WHERE
+		sessionID = '".session_id()."' AND id = userID;");
 		return true;
 	}
 	
@@ -166,10 +166,8 @@ class Session
 	
 	function DestroySession()
 	{
-		global $db;
-		$db->query("DELETE FROM ".SESSION." WHERE sess_id = '".session_id()."'"); 
+		$GLOBALS['DATABASE']->query("DELETE FROM ".SESSION." WHERE sessionID = '".session_id()."';"); 
 		session_destroy();
-		setcookie(session_name(), '', time() - 42000);
 	}
 }
 ?>

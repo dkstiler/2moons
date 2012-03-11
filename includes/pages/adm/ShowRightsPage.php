@@ -30,8 +30,8 @@
 if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FILE__)) || $_GET['sid'] != session_id()) exit;
 function ShowRightsPage()
 {
-	global $LNG, $CONF, $db, $USER;
-	$mode	= request_var('mode', '');
+	global $LNG, $CONF, $USER;
+	$mode	= HTTP::_GP('mode', '');
 	switch($mode)
 	{
 		case 'rights':
@@ -41,7 +41,7 @@ function ShowRightsPage()
 			
 			if ($_POST)
 			{
-				$id			= request_var('id_1', 0);
+				$id			= HTTP::_GP('id_1', 0);
 				
 				if($USER['id'] != ROOT_USER && $id == ROOT_USER) {
 					$template->message($LNG['ad_authlevel_error_3'], '?page=rights&mode=rights&sid='.session_id());
@@ -49,10 +49,10 @@ function ShowRightsPage()
 				}
 				
 				if($_POST['action'] == 'send') {
-					$db->query("UPDATE ".USERS." SET `rights` = '".serialize(array_map('intval', $_POST['rights']))."' WHERE `id` = '".$id."';");
+					$GLOBALS['DATABASE']->query("UPDATE ".USERS." SET `rights` = '".serialize(array_map('intval', $_POST['rights']))."' WHERE `id` = '".$id."';");
 				}
 				
-				$Rights	= $db->uniquequery("SELECT rights FROM ".USERS." WHERE `id` = '".$id."';");
+				$Rights	= $GLOBALS['DATABASE']->uniquequery("SELECT rights FROM ".USERS." WHERE `id` = '".$id."';");
 				if(($Rights['rights'] = unserialize($Rights['rights'])) === false)
 					$Rights['rights']	= array();
 				
@@ -82,10 +82,10 @@ function ShowRightsPage()
 				$WHEREUSERS	=	"AND `authlevel` = '".AUTH_USR."'";			
 				
 				
-			$QueryUsers	=	$db->query("SELECT `id`, `username`, `authlevel` FROM ".USERS." WHERE `universe` = '".$_SESSION['adminuni']."'".$WHEREUSERS.";");
+			$QueryUsers	=	$GLOBALS['DATABASE']->query("SELECT `id`, `username`, `authlevel` FROM ".USERS." WHERE `universe` = '".$_SESSION['adminuni']."'".$WHEREUSERS.";");
 				
 			$UserList	= "";
-			while ($List = $db->fetch_array($QueryUsers)) {
+			while ($List = $GLOBALS['DATABASE']->fetch_array($QueryUsers)) {
 				$UserList	.=	'<option value="'.$List['id'].'">'.$List['username'].'&nbsp;&nbsp;('.$LNG['rank'][$List['authlevel']].')</option>';
 			}	
 
@@ -115,18 +115,18 @@ function ShowRightsPage()
 			
 			if ($_POST)
 			{
-				$id			= request_var('id_1', 0);
-				$authlevel	= request_var('authlevel', 0);
+				$id			= HTTP::_GP('id_1', 0);
+				$authlevel	= HTTP::_GP('authlevel', 0);
 				
 				if($id == 0)
-					$id	= request_var('id_2', 0);
+					$id	= HTTP::_GP('id_2', 0);
 					
 				if($USER['id'] != ROOT_USER && $id == ROOT_USER) {
 					$template->message($LNG['ad_authlevel_error_3'], '?page=rights&mode=users&sid='.session_id());
 					exit;
 				}	
 				
-				$db->multi_query("UPDATE ".USERS." SET `authlevel` = '".request_var('authlevel', 0)."' WHERE `id` = '".$id."';");
+				$GLOBALS['DATABASE']->multi_query("UPDATE ".USERS." SET `authlevel` = '".HTTP::_GP('authlevel', 0)."' WHERE `id` = '".$id."';");
 				$template->message($LNG['ad_authlevel_succes'], '?page=rights&mode=users&sid='.session_id());
 				exit;
 			}
@@ -140,10 +140,10 @@ function ShowRightsPage()
 			elseif ($_GET['get'] == 'pla')
 				$WHEREUSERS	=	"AND `authlevel` = '".AUTH_USR."'";	
 				
-			$QueryUsers	=	$db->query("SELECT `id`, `username`, `authlevel` FROM ".USERS." WHERE `universe` = '".$_SESSION['adminuni']."'".$WHEREUSERS.";");
+			$QueryUsers	=	$GLOBALS['DATABASE']->query("SELECT `id`, `username`, `authlevel` FROM ".USERS." WHERE `universe` = '".$_SESSION['adminuni']."'".$WHEREUSERS.";");
 				
 			$UserList	= "";
-			while ($List = $db->fetch_array($QueryUsers)) {
+			while ($List = $GLOBALS['DATABASE']->fetch_array($QueryUsers)) {
 				$UserList	.=	'<option value="'.$List['id'].'">'.$List['username'].'&nbsp;&nbsp;('.$LNG['rank'][$List['authlevel']].')</option>';
 			}	
 

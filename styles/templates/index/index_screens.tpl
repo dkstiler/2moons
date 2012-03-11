@@ -1,5 +1,5 @@
 {extends file="index.tpl"}
-{block name="title" prepend}{$screenshots}{/block}
+{block name="title" prepend}{$LNG.screenshots}{/block}
 {block name="content"}
 <table>
 	<tr>

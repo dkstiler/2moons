@@ -13,13 +13,12 @@
 <meta name="generator" content="2Moons {$VERSION}">
 <!-- 
 	This website is powered by 2Moons {$VERSION}
-	2Moons is a free Space Browsergame initially created by Slaver and licensed under GNU/GPL.
-	2Moons is copyright 2009-2011 of Slaver. Extensions are copyright of their respective owners.
+	2Moons is a free Space Browsergame initially created by Jan Kröpke and licensed under GNU/GPL.
+	2Moons is copyright 2009-2012 of Jan Kröpke. Extensions are copyright of their respective owners.
 	Information and contribution at http://2moons.cc/
 -->
-<meta name="keywords" content="Browsergame, XNova, 2Moons, Slaver, Space, Weltraum, Private, Server, Speed">
-<meta name="medium" content="mult">
-<meta name="description" content="2Moons Browsergame powerd by Slaver"> <!-- Noob Check ;) -->
+<meta name="keywords" content="Weltraum Browsergame, XNova, 2Moons, Space, Private, Server, Speed">
+<meta name="description" content="2Moons Browsergame powerd by http://2moons.cc/"> <!-- Noob Check :) -->
 <!--[if lt IE 9]>
 <script src="scripts/base/html5.js"></script>
 <![endif]-->
@@ -29,13 +28,13 @@
 	<header>
 		<nav>
 			<ul id="menu">
-				<li><a href="index.php">{$menu_index}</a></li>
-				<li><a href="{$forum_url}" target="board">{$forum}</a></li>
-				<li><a href="index.php?page=news">{$menu_news}</a></li>
-				<li><a href="index.php?page=rules">{$menu_rules}</a></li>
-				<li><a href="index.php?page=top100">{$menu_top100}</a></li>
-				<li><a href="index.php?page=pranger">{$menu_pranger}</a></li>
-				<li><a href="index.php?page=disclamer">{$menu_disclamer}</a></li>
+				<li><a href="index.php">{$LNG.menu_index}</a></li>
+				<li><a href="{$forum_url}" target="board">{$LNG.forum}</a></li>
+				<li><a href="index.php?page=news">{$LNG.menu_news}</a></li>
+				<li><a href="index.php?page=rules">{$LNG.menu_rules}</a></li>
+				<li><a href="index.php?page=top100">{$LNG.menu_top100}</a></li>
+				<li><a href="index.php?page=pranger">{$LNG.menu_pranger}</a></li>
+				<li><a href="index.php?page=disclamer">{$LNG.menu_disclamer}</a></li>
 			</ul>
 		</nav>
 		<nav>
@@ -85,7 +84,7 @@
 		</section>
 	{/if}</div>
 	<footer>
-		<a href="index.php?page=disclamer">{$menu_disclamer}</a><br>2009-2011 <a href="http://2moons.cc" title="2Moons" target="copy">2Moons</a>
+		<a href="index.php?page=disclamer">{$LNG.menu_disclamer}</a><br>2009-2011 <a href="http://2moons.cc" title="2Moons" target="copy">2Moons</a>
 	</footer>
 </div>
 <div id="dialog" style="display:none;"></div>
@@ -109,12 +108,10 @@ var CONF			= {
 	htaccess		: {$htaccess}
 };
 var LANG			= {
-	register		: "{$register_now}",
-	login			: "{$login}",
-	uni_closed		: "{$uni_closed}"
+	register		: "{$LNG.register_now}",
+	login			: "{$LNG.login}",
+	uni_closed		: "{$LNG.uni_closed}"
 };
-
-$(document).ready(init);
 
 {if isset($code)}
 alert("{$code}");
@@ -122,15 +119,14 @@ alert("{$code}");
 </script>
 {if $fb_active}
 <div id="fb-root"></div>
-<script type="text/javascript" src="http://connect.facebook.net/en_US/all.js"></script>
-<script type="text/javascript">
-window.fbAsyncInit = FBinit;
-(function() {
-	var e = document.createElement('script'); e.async = true;
-	e.src = document.location.protocol +
-	  '//connect.facebook.net/en_US/all.js';
-	document.getElementById('fb-root').appendChild(e);
-}());
+<script>
+	window.fbAsyncInit = FBinit;
+	(function(d){
+		var js, id = 'facebook-jssdk'; if (d.getElementById(id)) return;
+		js = d.createElement('script'); js.id = id; js.async = true;
+		js.src = "//connect.facebook.net/en_US/all.js";
+		d.getElementsByTagName('head')[0].appendChild(js);
+	}(document));
 </script>
 {/if}
 {if $game_captcha}

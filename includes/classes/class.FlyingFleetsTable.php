@@ -51,7 +51,7 @@ class FlyingFleetsTable
 	}
 	
 	function getFleets($acsID = false) {
-		global $db, $USER, $resource;
+		global $USER, $resource;
 		
 		if($this->IsPhalanx) {
 			$SQLWhere	= "`fleet_start_id` = ".$this->PlanetID;
@@ -64,7 +64,7 @@ class FlyingFleetsTable
 				$SQLWhere	.= " OR (`fleet_target_owner` = ".$this->UserID." AND fleet_mission != 8)";
 			}
 		}
-		return $db->query("SELECT DISTINCT fleet.*, ownuser.username as own_username, targetuser.username as target_username, ownplanet.name as own_planetname, targetplanet.name as target_planetname 
+		return $GLOBALS['DATABASE']->query("SELECT DISTINCT fleet.*, ownuser.username as own_username, targetuser.username as target_username, ownplanet.name as own_planetname, targetplanet.name as target_planetname 
 		FROM ".FLEETS." fleet
 		LEFT JOIN ".USERS." ownuser ON (ownuser.id = fleet.fleet_owner)
 		LEFT JOIN ".USERS." targetuser ON (targetuser.id = fleet.fleet_target_owner)
@@ -74,12 +74,11 @@ class FlyingFleetsTable
 	}
 	
 	function renderTable() {
-		global $db;
-		$fleetResult	= $this->getFleets();
+				$fleetResult	= $this->getFleets();
 		$ACSDone		= array();
 		$FleetData		= array();
 		
-		while($fleetRow = $db->fetch_array($fleetResult)) 
+		while($fleetRow = $GLOBALS['DATABASE']->fetch_array($fleetResult)) 
 		{
 			if ($fleetRow['fleet_mess'] == 0 && $fleetRow['fleet_start_time'] > TIMESTAMP && ($fleetRow['fleet_group'] == 0 || !isset($ACSDone[$fleetRow['fleet_group']])))
 			{
@@ -102,19 +101,18 @@ class FlyingFleetsTable
 		}
 		
 		ksort($FleetData);
-		$db->free_result($fleetResult);
+		$GLOBALS['DATABASE']->free_result($fleetResult);
 		return $FleetData;
 	}
 	
 	function BuildFleetEventTable($fleetRow, $FleetState) 
 	{
-		global $db;
-		
+				
 		if ($FleetState == 0 && !$this->IsPhalanx && $fleetRow['fleet_group'] != 0)
 		{
 			$acsResult		= $this->getFleets($fleetRow['fleet_group']);
 			$EventString	= '';
-			while($acsRow = $db->fetch_array($acsResult))
+			while($acsRow = $GLOBALS['DATABASE']->fetch_array($acsResult))
 			{
 				$Return			= $this->getEventData($acsRow, $FleetState);
 					
@@ -122,7 +120,7 @@ class FlyingFleetsTable
 				$EventString    .= $Return[1].'<br><br>';
 				$Time			= $Return[2];
 			}
-			$db->free_result($acsResult);
+			$GLOBALS['DATABASE']->free_result($acsResult);
 			$EventString	= substr($EventString, 0, -8);
 		}
 		else

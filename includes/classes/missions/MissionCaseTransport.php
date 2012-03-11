@@ -35,12 +35,12 @@ class MissionCaseTransport extends MissionFunctions
 	
 	function TargetEvent()
 	{
-		global $db, $LANG;
-		$StartPlanet      = $db->uniquequery("SELECT name FROM ".PLANETS." WHERE `id` = '". $this->_fleet['fleet_start_id'] ."';");
+		global $LANG;
+		$StartPlanet      = $GLOBALS['DATABASE']->uniquequery("SELECT name FROM ".PLANETS." WHERE `id` = '". $this->_fleet['fleet_start_id'] ."';");
 		$StartName        = $StartPlanet['name'];
 		$StartOwner       = $this->_fleet['fleet_owner'];
 
-		$TargetPlanet     = $db->uniquequery("SELECT name FROM ".PLANETS." WHERE `id` = '". $this->_fleet['fleet_end_id'] ."';");
+		$TargetPlanet     = $GLOBALS['DATABASE']->uniquequery("SELECT name FROM ".PLANETS." WHERE `id` = '". $this->_fleet['fleet_end_id'] ."';");
 		$TargetName       = $TargetPlanet['name'];
 		$TargetOwner      = $this->_fleet['fleet_target_owner'];
 		
@@ -66,9 +66,11 @@ class MissionCaseTransport extends MissionFunctions
 	
 	function ReturnEvent()
 	{
-		global $LANG, $db;
+		global $LANG;
 		$LNG			= $LANG->GetUserLang($this->_fleet['fleet_owner']);
-		$StartName		= $db->countquery("SELECT name FROM ".PLANETS." WHERE id = ".$this->_fleet['fleet_end_id'].";");
+		
+		$StartName		= $GLOBALS['DATABASE']->countquery("SELECT name FROM ".PLANETS." WHERE id = ".$this->_fleet['fleet_end_id'].";");
+		
 		$Message		= sprintf($LNG['sys_tran_mess_back'], $StartName, GetStartAdressLink($this->_fleet, ''));
 		SendSimpleMessage($this->_fleet['fleet_owner'], 0, $this->_fleet['fleet_end_time'], 5, $LNG['sys_mess_tower'], $LNG['sys_mess_fleetback'], $Message);
 		$this->RestoreFleet();

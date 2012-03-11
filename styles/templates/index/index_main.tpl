@@ -1,5 +1,5 @@
 {extends file="index.tpl"}
-{block name="title" prepend}{$menu_index}{/block}
+{block name="title" prepend}{$LNG.menu_index}{/block}
 {block name="content"}
 <section>
 	<h1>{$welcome_to} {$servername}</h1>
@@ -65,14 +65,14 @@
 			<div class="button-important multi">
 				<a href="#" onclick="return Content('login');">
 					<span class="button-left"></span>
-					<span class="button-center">{$login}</span>
+					<span class="button-center">{$LNG.login}</span>
 					<span class="button-right"></span>
 				</a>
 			</div>
 			<div class="button-important multi">
 				<a href="#" onclick="return Content('register');">
 					<span class="button-left"></span>
-					<span class="button-center">{$register_now}</span>
+					<span class="button-center">{$LNG.register_now}</span>
 					<span class="button-right"></span>
 				</a>
 			</div>
@@ -85,7 +85,7 @@
 			<div class="button multi">
 				<a href="#" onclick="return Content('lost');">
 					<span class="button-left"></span>
-					<span class="button-center">{$lostpassword}</span>
+					<span class="button-center">{$LNG.lostpassword}</span>
 					<span class="button-right"></span>
 				</a>
 			</div>
@@ -95,7 +95,7 @@
 			{/if}
 				<a href="index.php?page=screens">
 					<span class="button-left"></span>
-					<span class="button-center">{$screenshots}</span>
+					<span class="button-center">{$LNG.screenshots}</span>
 					<span class="button-right"></span>
 				</a>
 			</div>

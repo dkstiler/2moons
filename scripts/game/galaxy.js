@@ -2,7 +2,7 @@ function doit(missionID, planetID, shipData) {
 
 	var shipDetail	= decodeURIComponent($.param({"ship": shipData}));
 	
-	$.getJSON("game.php?page=fleetajax&ajax=1&mission="+missionID+"&planetID="+planetID+"&"+shipDetail, function(data){
+	$.getJSON("game.php?page=fleetAjax&ajax=1&mission="+missionID+"&planetID="+planetID+"&"+shipDetail, function(data){
 		$('#slots').text(data.slots);
 		$('#probes').text(number_format(data.ship[210]));
 		$('#recyclers').text(number_format(data.ship[209]));

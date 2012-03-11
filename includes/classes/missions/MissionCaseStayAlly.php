@@ -36,12 +36,12 @@ class MissionCaseStayAlly extends MissionFunctions
 	
 	function TargetEvent()
 	{	
-		global $db, $LANG;
-		$StartPlanet      = $db->uniquequery("SELECT name FROM ".PLANETS." WHERE `id` = '". $this->_fleet['fleet_start_id'] ."';");
+		global $LANG;
+		$StartPlanet      = $GLOBALS['DATABASE']->uniquequery("SELECT name FROM ".PLANETS." WHERE `id` = '". $this->_fleet['fleet_start_id'] ."';");
 		$StartName        = $StartPlanet['name'];
 		$StartOwner       = $this->_fleet['fleet_owner'];
 
-		$TargetPlanet     = $db->uniquequery("SELECT name FROM ".PLANETS." WHERE `id` = '". $this->_fleet['fleet_end_id'] ."';");
+		$TargetPlanet     = $GLOBALS['DATABASE']->uniquequery("SELECT name FROM ".PLANETS." WHERE `id` = '". $this->_fleet['fleet_end_id'] ."';");
 		$TargetName       = $TargetPlanet['name'];
 		$TargetOwner      = $this->_fleet['fleet_target_owner'];
 			
@@ -53,7 +53,7 @@ class MissionCaseStayAlly extends MissionFunctions
 		$Message = sprintf($LNG['sys_tran_mess_user'], $StartName, GetStartAdressLink($this->_fleet, ''), $TargetName, GetTargetAdressLink($this->_fleet, ''), $this->_fleet['fleet_resource_metal'], $LNG['tech'][901], $this->_fleet['fleet_resource_crystal'], $LNG['tech'][902], $this->_fleet['fleet_resource_deuterium'], $LNG['tech'][903]);
 		SendSimpleMessage ($TargetOwner, 0, $this->_fleet['fleet_start_time'], 5, $LNG['sys_mess_tower'], $LNG['sys_mess_transport'], $Message);
 
-		$this->setState(FLEET_STAY);
+		$this->setState(FLEET_HOLD);
 		$this->SaveFleet();
 	}
 	
@@ -66,9 +66,12 @@ class MissionCaseStayAlly extends MissionFunctions
 	function ReturnEvent()
 	{
 		global $LANG;
-		$LNG				= $LANG->GetUserLang($this->_fleet['fleet_owner']);
+		
+		$LNG		= $LANG->GetUserLang($this->_fleet['fleet_owner']);
+		
+		$StartName	= $GLOBALS['DATABASE']->countquery("SELECT name FROM ".PLANETS." WHERE id = ".$this->_fleet['fleet_end_id'].";");
 	
-		$Message			= sprintf ($LNG['sys_tran_mess_back'], $StartName, GetStartAdressLink($this->_fleet, ''));
+		$Message	= sprintf ($LNG['sys_tran_mess_back'], $StartName, GetStartAdressLink($this->_fleet, ''));
 		SendSimpleMessage($this->_fleet['fleet_owner'], 0, $this->_fleet['fleet_end_time'], 5, $LNG['sys_mess_tower'], $LNG['sys_mess_fleetback'], $Message);
 
 		$this->RestoreFleet();

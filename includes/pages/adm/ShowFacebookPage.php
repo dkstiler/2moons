@@ -34,8 +34,8 @@ function ShowFacebookPage() {
 	if ($_POST)
 	{
 		$CONF['fb_on']		= isset($_POST['fb_on']) && $_POST['fb_on'] == 'on' && !empty($_POST['fb_skey']) && !empty($_POST['fb_apikey']) ? 1 : 0;
-		$CONF['fb_apikey']	= request_var('fb_apikey', '');
-		$CONF['fb_skey'] 	= request_var('fb_skey', '');
+		$CONF['fb_apikey']	= HTTP::_GP('fb_apikey', '');
+		$CONF['fb_skey'] 	= HTTP::_GP('fb_skey', '');
 	
 		update_config(array(
 			'fb_on'		=> $CONF['fb_on'],

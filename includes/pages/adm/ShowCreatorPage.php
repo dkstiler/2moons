@@ -32,7 +32,7 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowCreatorPage()
 {
-	global $LNG, $db, $USER, $UNI, $LANG;
+	global $LNG, $USER, $UNI, $LANG, $CONF;
 
 	$template	= new template();
 
@@ -43,19 +43,19 @@ function ShowCreatorPage()
 			$LANG->includeLang(array('PUBLIC'));
 			if ($_POST)
 			{
-				$UserName 	= request_var('name', '', UTF8_SUPPORT);
-				$UserPass 	= request_var('password', '');
-				$UserPass2 	= request_var('password2', '');
-				$UserMail 	= request_var('email', '');
-				$UserMail2	= request_var('email2', '');
-				$UserLang 	= request_var('lang', '');
-				$UserAuth 	= request_var('authlevel', 0);
-				$Galaxy 	= request_var('galaxy', 0);
-				$System 	= request_var('system', 0);
-				$Planet 	= request_var('planet', 0);
+				$UserName 	= HTTP::_GP('name', '', UTF8_SUPPORT);
+				$UserPass 	= HTTP::_GP('password', '');
+				$UserPass2 	= HTTP::_GP('password2', '');
+				$UserMail 	= HTTP::_GP('email', '');
+				$UserMail2	= HTTP::_GP('email2', '');
+				$UserLang 	= HTTP::_GP('lang', '');
+				$UserAuth 	= HTTP::_GP('authlevel', 0);
+				$Galaxy 	= HTTP::_GP('galaxy', 0);
+				$System 	= HTTP::_GP('system', 0);
+				$Planet 	= HTTP::_GP('planet', 0);
 					
-				$Exist['userv'] = $db->uniquequery("SELECT username, email FROM ".USERS." WHERE username = '".$db->sql_escape($UserName)."' OR email = '".$db->sql_escape($UserEmail)."';");
-				$Exist['vaild'] = $db->uniquequery("SELECT username, email FROM ".USERS_VALID." WHERE username = '".$db->sql_escape($UserName)."' OR email = '".$db->sql_escape($UserEmail)."';");
+				$ExistsUser 	= $GLOBALS['DATABASE']->countquery("SELECT (SELECT COUNT(*) FROM ".USERS." WHERE `universe` = ".$_SESSION['adminuni']." AND `username` = '".$GLOBALS['DATABASE']->sql_escape($UserName)."') + (SELECT COUNT(*) FROM ".USERS_VALID." WHERE `universe` = ".$_SESSION['adminuni']." AND `username` = '".$GLOBALS['DATABASE']->sql_escape($UserName)."')");
+				$ExistsMails	= $GLOBALS['DATABASE']->countquery("SELECT (SELECT COUNT(*) FROM ".USERS." WHERE `universe` = ".$_SESSION['adminuni']." AND (`email` = '".$GLOBALS['DATABASE']->sql_escape($UserMail)."' OR `email_2` = '".$GLOBALS['DATABASE']->sql_escape($UserMail)."')) + (SELECT COUNT(*) FROM ".USERS_VALID." WHERE `universe` = ".$_SESSION['adminuni']." AND `email` = '".$GLOBALS['DATABASE']->sql_escape($UserMail)."')");
 								
 				if (!ValidateAddress($UserMail)) 
 					$errors .= $LNG['invalid_mail_adress'];
@@ -73,12 +73,12 @@ function ShowCreatorPage()
 					$errors .= $LNG['different_mails'];
 					
 				if (!CheckName($UserName))
-					$errors .= (UTF8_SUPPORT) ? $LNG['user_field_no_space'] : $LNG['user_field_no_alphanumeric'];				
+					$errors .= $LNG['user_field_specialchar'];				
 										
-				if ((isset($Exist['userv']['username']) || isset($Exist['vaild']['username']) && ($UserName == $Exist['userv']['username'] || $UserName == $Exist['vaild']['username'])))
+				if ($ExistsUser != 0)
 					$errors .= $LNG['user_already_exists'];
 
-				if ((isset($Exist['userv']['email']) || isset($Exist['vaild']['email'])) && ($UserEmail == $Exist['userv']['email'] || $UserEmail == $Exist['vaild']['email']))
+				if ($ExistsMails != 0)
 					$errors .= $LNG['mail_already_exists'];
 				
 				if (CheckPlanetIfExist($Galaxy, $System, $Position, $_SESSION['adminuni'])) {
@@ -91,28 +91,28 @@ function ShowCreatorPage()
 				}
 				
 				$SQL = "INSERT INTO ".USERS." SET ";
-				$SQL .= "`username` = '".$db->sql_escape($UserName). "', ";
-				$SQL .= "`email` = '".$db->sql_escape($UserMail)."', ";
-				$SQL .= "`email_2` = '".$db->sql_escape($UserMail)."', ";
-				$SQL .= "`lang` = '".$db->sql_escape($UserLang)."', ";
+				$SQL .= "`username` = '".$GLOBALS['DATABASE']->sql_escape($UserName). "', ";
+				$SQL .= "`email` = '".$GLOBALS['DATABASE']->sql_escape($UserMail)."', ";
+				$SQL .= "`email_2` = '".$GLOBALS['DATABASE']->sql_escape($UserMail)."', ";
+				$SQL .= "`lang` = '".$GLOBALS['DATABASE']->sql_escape($UserLang)."', ";
 				$SQL .= "`authlevel` = '".$UserAuth."', ";
 				$SQL .= "`ip_at_reg` = '".$_SERVER['REMOTE_ADDR']."', ";
 				$SQL .= "`id_planet` = '0', ";
 				$SQL .= "`universe` = '".$_SESSION['adminuni']."',";
 				$SQL .= "`onlinetime` = '".TIMESTAMP."', ";
 				$SQL .= "`register_time` = '".TIMESTAMP. "', ";
-				$SQL .= "`password` = '".md5($UserPass)."', ";
+				$SQL .= "`password` = '".cryptPassword($UserPass)."', ";
 				$SQL .= "`dpath` = '".DEFAULT_THEME."', ";
 				$SQL .= "`timezone` = '".$CONF['timezone']."', ";
 				$SQL .= "`uctime`= '0';";
-				$db->query($SQL);
-				$db->query("UPDATE ".CONFIG." SET `users_amount` = users_amount + '1' WHERE `uni` = '".$_SESSION['adminuni']."';");
+				$GLOBALS['DATABASE']->query($SQL);
+				$GLOBALS['DATABASE']->query("UPDATE ".CONFIG." SET `users_amount` = users_amount + '1' WHERE `uni` = '".$_SESSION['adminuni']."';");
 
-				$ID_USER 	= $db->uniquequery("SELECT `id` FROM ".USERS." WHERE `username` = '".$db->sql_escape($UserName)."';");
+				$ID_USER 	= $GLOBALS['DATABASE']->uniquequery("SELECT `id` FROM ".USERS." WHERE `username` = '".$GLOBALS['DATABASE']->sql_escape($UserName)."';");
 				
 				require_once(ROOT_PATH.'includes/functions/CreateOnePlanetRecord.php');
-				CreateOnePlanetRecord($Galaxy, $System, $Planet, $_SESSION['adminuni'] ,$ID_USER['id'], $UserPlanet, true, $UserAuth);
-				$ID_PLANET 	= $db->uniquequery("SELECT `id` FROM ".PLANETS." WHERE `id_owner` = '".$ID_USER['id']."';");
+				CreateOnePlanetRecord($Galaxy, $System, $Planet, $_SESSION['adminuni'] ,$ID_USER['id'], $LNG['fcm_planet'], true, $UserAuth);
+				$ID_PLANET 	= $GLOBALS['DATABASE']->uniquequery("SELECT `id` FROM ".PLANETS." WHERE `id_owner` = '".$ID_USER['id']."';");
 								
 				$SQL = "UPDATE ".USERS." SET ";
 				$SQL .= "`id_planet` = '".$ID_PLANET['id']."', ";
@@ -123,7 +123,7 @@ function ShowCreatorPage()
 				$SQL .= "WHERE ";
 				$SQL .= "`id` = '".$ID_USER['id']."' ";
 				$SQL .= "LIMIT 1;";
-				$db->query($SQL);
+				$GLOBALS['DATABASE']->query($SQL);
 				
 				$template->message($LNG['new_user_success'], '?page=create&mode=user', 3, true);
 				exit;
@@ -164,12 +164,12 @@ function ShowCreatorPage()
 		case 'moon':
 			if ($_POST)
 			{
-				$PlanetID  	= request_var('add_moon', 0);
-				$MoonName  	= request_var('name', '', UTF8_SUPPORT);
-				$Diameter	= request_var('diameter', 0);
-				$FieldMax	= request_var('field_max', 0);
+				$PlanetID  	= HTTP::_GP('add_moon', 0);
+				$MoonName  	= HTTP::_GP('name', '', UTF8_SUPPORT);
+				$Diameter	= HTTP::_GP('diameter', 0);
+				$FieldMax	= HTTP::_GP('field_max', 0);
 			
-				$MoonPlanet	= $db->uniquequery("SELECT `temp_max`, `temp_min`, `id_luna`, `galaxy`, `system`, `planet`, `planet_type`, `destruyed`, `id_owner` FROM ".PLANETS." WHERE `id` = '".$PlanetID."' AND `universe` = '".$_SESSION['adminuni']."' AND `planet_type` = '1' AND `destruyed` = '0';");
+				$MoonPlanet	= $GLOBALS['DATABASE']->uniquequery("SELECT `temp_max`, `temp_min`, `id_luna`, `galaxy`, `system`, `planet`, `planet_type`, `destruyed`, `id_owner` FROM ".PLANETS." WHERE `id` = '".$PlanetID."' AND `universe` = '".$_SESSION['adminuni']."' AND `planet_type` = '1' AND `destruyed` = '0';");
 
 				if (!isset($MoonPlanet)) {
 					$template->message($LNG['mo_planet_doesnt_exist'], '?page=create&mode=moon', 3, true);
@@ -207,15 +207,19 @@ function ShowCreatorPage()
 		case 'planet':
 			if ($_POST) 
 			{
-				$id          = request_var('id', 0);
-				$Galaxy      = request_var('galaxy', 0);
-				$System      = request_var('system', 0);
-				$Planet      = request_var('planet', 0);
-				$name        = request_var('name', '', UTF8_SUPPORT);
-				$field_max   = request_var('field_max', 0);
+				$id          = HTTP::_GP('id', 0);
+				$Galaxy      = HTTP::_GP('galaxy', 0);
+				$System      = HTTP::_GP('system', 0);
+				$Planet      = HTTP::_GP('planet', 0);
+				$name        = HTTP::_GP('name', '', UTF8_SUPPORT);
+				$field_max   = HTTP::_GP('field_max', 0);
 				
 				
-				$ISUser		= $db->uniquequery("SELECT id, authlevel FROM ".USERS." WHERE `id` = '".$id."' AND `universe` = '".$_SESSION['adminuni']."';");
+				$ISUser		= $GLOBALS['DATABASE']->uniquequery("SELECT id, authlevel FROM ".USERS." WHERE `id` = '".$id."' AND `universe` = '".$_SESSION['adminuni']."';");
+				if($Galaxy > $CONF['max_galaxy'] || $System > $CONF['max_system'] || $Planet > $CONF['max_planets']) {
+					$template->message($LNG['po_complete_all2'], '?page=create&mode=planet', 3, true);
+					exit;					
+				}
 				if(CheckPlanetIfExist($Galaxy, $System, $Planet, $_SESSION['adminuni']) || !isset($ISUser)) {
 					$template->message($LNG['po_complete_all'], '?page=create&mode=planet', 3, true);
 					exit;
@@ -230,7 +234,7 @@ function ShowCreatorPage()
 					$SQL .= "`field_max` = '".$field_max."' ";
 			
 				if (!empty($name))
-					$SQL .= ", `name` = '".$db->sql_escape($name)."' ";
+					$SQL .= ", `name` = '".$GLOBALS['DATABASE']->sql_escape($name)."' ";
 
 				$SQL .= "WHERE ";
 				$SQL .= "`universe` = '". $_SESSION['adminuni'] ."' AND ";
@@ -238,14 +242,14 @@ function ShowCreatorPage()
 				$SQL .= "`system` = '". $System ."' AND ";
 				$SQL .= "`planet` = '". $Planet ."' AND ";
 				$SQL .= "`planet_type` = '1'";
-				$db->query($SQL);
+				$GLOBALS['DATABASE']->query($SQL);
 
 				$template->message($LNG['po_complete_succes'], '?page=create&mode=planet', 3, true);
 				exit;
 			}
 			
-			$Query	= $db->query("SELECT `uni`, `game_name` FROM ".CONFIG." ORDER BY `uni` ASC;");
-			while($Unis	= $db->fetch_array($Query)) {
+			$Query	= $GLOBALS['DATABASE']->query("SELECT `uni`, `game_name` FROM ".CONFIG." ORDER BY `uni` ASC;");
+			while($Unis	= $GLOBALS['DATABASE']->fetch_array($Query)) {
 				$AvailableUnis[$Unis['uni']]	= $Unis;
 			}
 

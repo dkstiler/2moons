@@ -31,14 +31,14 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowAccountDataPage()
 {
-	global $USER, $reslist, $resource, $db, $LNG;
+	global $USER, $reslist, $resource, $LNG;
 
 	$template 	= new template();
 
-	$id_u	= request_var('id_u', 0);
+	$id_u	= HTTP::_GP('id_u', 0);
 	if (!empty($id_u))
 	{
-		$OnlyQueryLogin 	= $db->uniquequery("SELECT `id`, `authlevel` FROM ".USERS." WHERE `id` = '".$id_u."' AND `universe` = '".$_SESSION['adminuni']."';");
+		$OnlyQueryLogin 	= $GLOBALS['DATABASE']->uniquequery("SELECT `id`, `authlevel` FROM ".USERS." WHERE `id` = '".$id_u."' AND `universe` = '".$_SESSION['adminuni']."';");
 
 		if(!isset($OnlyQueryLogin))
 		{
@@ -53,15 +53,15 @@ function ShowAccountDataPage()
 		
 			// COMIENZA SAQUEO DE DATOS DE LA TABLA DE USUARIOS
 			$SpecifyItemsU	= 
-			"u.id,u.username,u.email,u.email_2,u.authlevel,u.id_planet,u.galaxy,u.system,u.planet,u.user_lastip,u.ip_at_reg,u.darkmatter,u.register_time,u.onlinetime,u.noipcheck,u.urlaubs_modus,u.
+			"u.id,u.username,u.email,u.email_2,u.authlevel,u.id_planet,u.galaxy,u.system,u.planet,u.user_lastip,u.ip_at_reg,u.darkmatter,u.register_time,u.onlinetime,u.urlaubs_modus,u.
 			 urlaubs_until,u.ally_id,a.ally_name,".$SpecifyItemsUQ."
 			 u.ally_register_time,u.ally_rank_id,u.bana,u.banaday";
 			
-			$UserQuery 	= 	$db->uniquequery("SELECT ".$SpecifyItemsU." FROM ".USERS." as u LEFT JOIN ".SESSION." as s ON s.user_id = u.id LEFT JOIN ".ALLIANCE." a ON a.id = u.ally_id WHERE u.`id` = '".$id_u."';");
+			$UserQuery 	= 	$GLOBALS['DATABASE']->uniquequery("SELECT ".$SpecifyItemsU." FROM ".USERS." as u LEFT JOIN ".SESSION." as s ON s.userID = u.id LEFT JOIN ".ALLIANCE." a ON a.id = u.ally_id WHERE u.`id` = '".$id_u."';");
 
 			
-			$reg_time		= tz_date($UserQuery['register_time']);
-			$onlinetime		= tz_date($UserQuery['onlinetime']);
+			$reg_time		= _date($LNG['php_tdformat'], $UserQuery['register_time'], $USER['timezone']);
+			$onlinetime		= _date($LNG['php_tdformat'], $UserQuery['onlinetime'], $USER['timezone']);
 			$id				= $UserQuery['id'];
 			$nombre			= $UserQuery['username'];
 			$email_1		= $UserQuery['email'];
@@ -75,7 +75,6 @@ function ShowAccountDataPage()
 			$info			= $UserQuery['user_ua'];
 			$alianza		= $UserQuery['ally_name'];
 			$nivel			= $LNG['rank'][$UserQuery['authlevel']];
-			$ipcheck		= $LNG['ac_checkip'][$UserQuery['noipcheck']];
 			$vacas 			= $LNG['one_is_yes'][$UserQuery['urlaubs_modus']];
 			$suspen 		= $LNG['one_is_yes'][$UserQuery['bana']]; 
 
@@ -103,11 +102,11 @@ function ShowAccountDataPage()
 			{
 				$mas			= '<a ref="#" onclick="$(\'#banned\').slideToggle();return false"> '.$LNG['ac_more'].'</a>';
 				
-				$BannedQuery	= $db->uniquequery("SELECT theme,time,longer,author FROM ".BANNED." WHERE `who` = '".$UserQuery['username']."';");
+				$BannedQuery	= $GLOBALS['DATABASE']->uniquequery("SELECT theme,time,longer,author FROM ".BANNED." WHERE `who` = '".$UserQuery['username']."';");
 				
 				
-				$sus_longer	= tz_date($BannedQuery['longer']);
-				$sus_time	= tz_date($BannedQuery['time']);
+				$sus_longer	= _date($LNG['php_tdformat'], $BannedQuery['longer'], $USER['timezone']);
+				$sus_time	= _date($LNG['php_tdformat'], $BannedQuery['time'], $USER['timezone']);
 				$sus_reason	= $BannedQuery['theme'];
 				$sus_author	= $BannedQuery['author'];
 				
@@ -119,7 +118,7 @@ function ShowAccountDataPage()
 			"tech_count,defs_count,fleet_count,build_count,build_points,tech_points,defs_points,fleet_points,tech_rank,build_rank,defs_rank,fleet_rank,total_points,
 			stat_type";
 			
-			$StatQuery	= $db->uniquequery("SELECT ".$SpecifyItemsS." FROM ".STATPOINTS." WHERE `id_owner` = '".$id_u."' AND `stat_type` = '1';");
+			$StatQuery	= $GLOBALS['DATABASE']->uniquequery("SELECT ".$SpecifyItemsS." FROM ".STATPOINTS." WHERE `id_owner` = '".$id_u."' AND `stat_type` = '1';");
 
 			$count_tecno	= pretty_number($StatQuery['tech_count']);
 			$count_def		= pretty_number($StatQuery['defs_count']);
@@ -163,7 +162,7 @@ function ShowAccountDataPage()
 				$SpecifyItemsA	= 
 				"ally_owner,id,ally_tag,ally_name,ally_web,ally_description,ally_text,ally_request,ally_image,ally_members,ally_register_time";
 				
-				$AllianceQuery		= $db->uniquequery("SELECT ".$SpecifyItemsA." FROM ".ALLIANCE." WHERE `ally_name` = '".$alianza."';");
+				$AllianceQuery		= $GLOBALS['DATABASE']->uniquequery("SELECT ".$SpecifyItemsA." FROM ".ALLIANCE." WHERE `ally_name` = '".$alianza."';");
 				
 				
 				$alianza				= $alianza;
@@ -172,7 +171,7 @@ function ShowAccountDataPage()
 				$tag					= $AllianceQuery['ally_tag'];
 				$ali_nom				= $AllianceQuery['ally_name'];
 				$ali_cant				= $AllianceQuery['ally_members'];
-				$ally_register_time		= tz_date($AllianceQuery['ally_register_time']);
+				$ally_register_time		= _date($LNG['php_tdformat'], $AllianceQuery['ally_register_time'], $USER['timezone']);
 				$ali_lider				= $AllianceQuery['ally_owner'];
 				$ali_web				= $AllianceQuery['ally_web'] != NULL ? "<a href=".$AllianceQuery['ally_web']." target=_blank>".$AllianceQuery['ally_web']."</a>" : $LNG['ac_no_web'];
 										
@@ -221,12 +220,12 @@ function ShowAccountDataPage()
 				}
 				
 				
-				$SearchLeader		= $db->uniquequery("SELECT `username` FROM ".USERS." WHERE `id` = '".$ali_lider."';");
+				$SearchLeader		= $GLOBALS['DATABASE']->uniquequery("SELECT `username` FROM ".USERS." WHERE `id` = '".$ali_lider."';");
 				$ali_lider	= $SearchLeader['username'];
 
 
 
-				$StatQueryAlly	= $db->uniquequery("SELECT ".$SpecifyItemsS." FROM ".STATPOINTS." WHERE `id_owner` = '".$ali_lider."' AND `stat_type` = '2';");
+				$StatQueryAlly	= $GLOBALS['DATABASE']->uniquequery("SELECT ".$SpecifyItemsS." FROM ".STATPOINTS." WHERE `id_owner` = '".$ali_lider."' AND `stat_type` = '2';");
 						
 				$count_tecno_ali	= pretty_number($StatQueryAlly['tech_count']);
 				$count_def_ali		= pretty_number($StatQueryAlly['defs_count']);
@@ -257,9 +256,9 @@ function ShowAccountDataPage()
 			// COMIENZA EL SAQUEO DE DATOS DE LOS PLANETAS
 			$SpecifyItemsP	= "planet_type,id,name,galaxy,system,planet,destruyed,diameter,field_current,field_max,temp_min,temp_max,metal,crystal,deuterium,energy,".$SpecifyItemsPQ."energy_used";
 				
-			$PlanetsQuery	= $db->query("SELECT ".$SpecifyItemsP." FROM ".PLANETS." WHERE `id_owner` = '".$id_u."';");
+			$PlanetsQuery	= $GLOBALS['DATABASE']->query("SELECT ".$SpecifyItemsP." FROM ".PLANETS." WHERE `id_owner` = '".$id_u."';");
 			
-			while ($PlanetsWhile	= $db->fetch_array($PlanetsQuery))
+			while ($PlanetsWhile	= $GLOBALS['DATABASE']->fetch_array($PlanetsQuery))
 			{
 				if ($PlanetsWhile['planet_type'] == 3)
 				{
@@ -418,7 +417,7 @@ function ShowAccountDataPage()
 				'id_ali'						=> $id_ali,
 				'ip'							=> $ip,
 				'ip2'							=> $ip2,
-				'ipcheck'						=> $ipcheck,
+				'ipcheck'						=> true,
 				'reg_time'						=> $reg_time,
 				'onlinetime'					=> $onlinetime,
 				'id_p'							=> $id_p,
@@ -518,8 +517,8 @@ function ShowAccountDataPage()
 		exit;
 	}
 	$Userlist	= "";
-	$UserWhileLogin	= $db->query("SELECT `id`, `username`, `authlevel` FROM ".USERS." WHERE `authlevel` <= '".$USER['authlevel']."' AND `universe` = '".$_SESSION['adminuni']."' ORDER BY `username` ASC;");
-	while($UserList	= $db->fetch_array($UserWhileLogin))
+	$UserWhileLogin	= $GLOBALS['DATABASE']->query("SELECT `id`, `username`, `authlevel` FROM ".USERS." WHERE `authlevel` <= '".$USER['authlevel']."' AND `universe` = '".$_SESSION['adminuni']."' ORDER BY `username` ASC;");
+	while($UserList	= $GLOBALS['DATABASE']->fetch_array($UserWhileLogin))
 	{
 		$Userlist	.= "<option value=\"".$UserList['id']."\">".$UserList['username']."&nbsp;&nbsp;(".$LNG['rank'][$UserList['authlevel']].")</option>";
 	}

@@ -6,15 +6,13 @@
  */
 
 /**
- * Smarty lower modifier plugin
+ * 2Moons json modifier plugin
  *
  * Type:     modifier<br>
- * Name:     lower<br>
- * Purpose:  convert string to lowercase
+ * Name:     json<br>
+ * Purpose:  convert variable to json object
  *
- * @link http://www.smarty.net/manual/en/language.modifier.lower.php lower (Smarty online manual)
- * @author Monte Ohrt <monte at ohrt dot com>
- * @author Uwe Tews
+ * @author Jan Kröpke
  * @param array $params parameters
  * @return string with compiled code
  */

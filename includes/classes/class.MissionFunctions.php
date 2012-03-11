@@ -27,8 +27,6 @@
  * @link http://code.google.com/p/2moons/
  */
 
-if (!defined('INSIDE')) exit;
-
 class MissionFunctions
 {	
 	public $kill	= 0;
@@ -62,21 +60,24 @@ class MissionFunctions
 	
 	function SaveFleet()
 	{
-		global $db;
 		if($this->kill == 1)
 			return;
 			
+		$Qry	= array();
+		
 		foreach($this->_upd as $Opt => $Val)
 		{
 			$Qry[]	= "`".$Opt."` = '".$Val."'";
 		}
 		
-		$db->multi_query("UPDATE ".FLEETS." SET ".implode(', ',$Qry)." WHERE `fleet_id` = ".$this->_fleet['fleet_id'].";UPDATE ".FLEETS_EVENT." SET time = ".$this->eventTime." WHERE `fleetID` = ".$this->_fleet['fleet_id'].";");
+		if(!empty($Qry)) {
+			$GLOBALS['DATABASE']->multi_query("UPDATE ".FLEETS." SET ".implode(', ',$Qry)." WHERE `fleet_id` = ".$this->_fleet['fleet_id'].";UPDATE ".FLEETS_EVENT." SET time = ".$this->eventTime." WHERE `fleetID` = ".$this->_fleet['fleet_id'].";");
+		}
 	}
 		
 	function RestoreFleet($Start = true)
 	{
-		global $resource, $db;
+		global $resource;
 
 		$FleetRecord         = explode(';', $this->_fleet['fleet_array']);
 		$QryUpdFleet         = '';
@@ -99,20 +100,19 @@ class MissionFunctions
 		$Qry  .= "WHERE ";
 		$Qry  .= "p.`id` = '".($Start == true ? $this->_fleet['fleet_start_id'] : $this->_fleet['fleet_end_id'])."' ";
 		$Qry  .= "AND u.id = p.id_owner;";
-		$db->multi_query($Qry);
+		$GLOBALS['DATABASE']->multi_query($Qry);
 		$this->KillFleet();
 	}
 	
 	function StoreGoodsToPlanet($Start = false)
 	{
-		global $db;
-		$Qry   = "UPDATE ".PLANETS." SET ";
+				$Qry   = "UPDATE ".PLANETS." SET ";
 		$Qry  .= "`metal` = `metal` + ".$this->_fleet['fleet_resource_metal'].", ";
 		$Qry  .= "`crystal` = `crystal` + ".$this->_fleet['fleet_resource_crystal'].", ";
 		$Qry  .= "`deuterium` = `deuterium` + ".$this->_fleet['fleet_resource_deuterium']." ";
 		$Qry  .= "WHERE ";
 		$Qry  .= "`id` = ".($Start == true ? $this->_fleet['fleet_start_id'] : $this->_fleet['fleet_end_id']).";";
-		$db->query($Qry);
+		$GLOBALS['DATABASE']->query($Qry);
 		
 		$this->UpdateFleet('fleet_resource_metal', '0');
 		$this->UpdateFleet('fleet_resource_crystal', '0');
@@ -121,9 +121,8 @@ class MissionFunctions
 	
 	function KillFleet()
 	{
-		global $db;
-		$this->kill	= 1;
-		$db->multi_query("DELETE FROM ".FLEETS." WHERE `fleet_id` = ".$this->_fleet['fleet_id'].";
+				$this->kill	= 1;
+		$GLOBALS['DATABASE']->multi_query("DELETE FROM ".FLEETS." WHERE `fleet_id` = ".$this->_fleet['fleet_id'].";
 		DELETE FROM ".FLEETS_EVENT." WHERE `fleetID` = ".$this->_fleet['fleet_id'].";");
 	}	
 }

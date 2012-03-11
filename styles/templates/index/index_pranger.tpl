@@ -1,16 +1,16 @@
 {extends file="index.tpl"}
-{block name="title" prepend}{$menu_pranger}{/block}
+{block name="title" prepend}{$LNG.menu_pranger}{/block}
 {block name="content"}
 <select onchange="changeUni($(this).val())">
 {html_options options=$AvailableUnis selected=$UNI}</select>
 <br>
 <table>
 <tr>
-	<th style="width:20%;">{$bn_player}</th>
-	<th style="width:20%;">{$bn_reason}</th>
-	<th style="width:20%;">{$bn_from}</th>
-	<th style="width:20%;">{$bn_until}</th>
-	<th style="width:20%;">{$bn_by}</th>
+	<th style="width:20%;">{$LNG.bn_player}</th>
+	<th style="width:20%;">{$LNG.bn_reason}</th>
+	<th style="width:20%;">{$LNG.bn_from}</th>
+	<th style="width:20%;">{$LNG.bn_until}</th>
+	<th style="width:20%;">{$LNG.bn_by}</th>
 </tr>
 <tr><td colspan="5"><br></td></tr>
 {foreach item=PlayerInfo from=$PrangerList name=Pranger}

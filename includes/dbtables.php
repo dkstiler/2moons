@@ -33,6 +33,7 @@ define('DB_PREFIX'			, $database['tableprefix']);
 
 define('AKS'				, DB_PREFIX.'aks');
 define('ALLIANCE'			, DB_PREFIX.'alliance');
+define('ALLIANCE_RANK'		, DB_PREFIX.'alliance_ranks');
 define('ALLIANCE_REQUEST'	, DB_PREFIX.'alliance_request');
 define('BANNED'				, DB_PREFIX.'banned');
 define('BUDDY'				, DB_PREFIX.'buddy');
@@ -52,14 +53,21 @@ define('NOTES'				, DB_PREFIX.'notes');
 define('MESSAGES'			, DB_PREFIX.'messages');
 define('PLANETS'            , DB_PREFIX.'planets');
 define('RW'		            , DB_PREFIX.'raports');
+define('RECORDS'		    , DB_PREFIX.'records');
 define('SESSION'			, DB_PREFIX.'session');
+define('SHORTCUTS'			, DB_PREFIX.'shortcuts');
 define('STATPOINTS'			, DB_PREFIX.'statpoints');
-define('SUPP'				, DB_PREFIX.'supp');
+define('TICKETS'			, DB_PREFIX.'ticket');
+define('TICKETS_ANSWER'		, DB_PREFIX.'ticket_answer');
+define('TICKETS_CATEGORY'	, DB_PREFIX.'ticket_category');
 define('TOPKB'				, DB_PREFIX.'topkb');
 define('TOPKB_USERS'		, DB_PREFIX.'users_to_topkb');
 define('USERS'				, DB_PREFIX.'users');
 define('USERS_ACS'			, DB_PREFIX.'users_to_acs');
 define('USERS_AUTH'			, DB_PREFIX.'users_to_extauth');
 define('USERS_VALID'	 	, DB_PREFIX.'users_valid');
+define('VARS'	 			, DB_PREFIX.'vars');
+define('VARS_RAPIDFIRE'		, DB_PREFIX.'vars_rapidfire');
+define('VARS_REQUIRE'	 	, DB_PREFIX.'vars_requriements');
 
 // MOD-TABLES

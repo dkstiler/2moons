@@ -2,12 +2,12 @@
 <tr>
 	<td colspan="2">
 		<div id="main" class="left">
-			<h2>{lang}step6_head{/lang}</h2>
-			<p>{lang}step6_desc{/lang}</p>
-			<h2>{lang}step6_info_head{/lang}</h2>
-			<p>{lang}step6_info_additional{/lang}</p>
+			<h2>{$LNG.step6_head}</h2>
+			<p>{$LNG.step6_desc}</p>
+			<h2>{$LNG.step6_info_head}</h2>
+			<p>{$LNG.step6_info_additional}</p>
 			<div style="text-align:center;"><p>
-				<a href="../admin.php"><button>{lang}login{/lang}</button></a>
+				<a href="../admin.php"><button>{$LNG.login}</button></a>
 			</p></div>
 		</div>
 	</td>

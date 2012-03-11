@@ -40,7 +40,7 @@ function getUniverse()
 		if(isset($_SERVER["REDIRECT_UNI"])) {
 			$UNI	= $_SERVER["REDIRECT_UNI"];
 		} else {
-			redirectTo("uni".ROOT_UNI."/".basename($_SERVER['SCRIPT_FILENAME']).(!empty($_SERVER["QUERY_STRING"]) ? "?".$_SERVER["QUERY_STRING"]: ""));
+			HTTP::redirectTo("uni".ROOT_UNI."/".basename($_SERVER['SCRIPT_FILENAME']).(!empty($_SERVER["QUERY_STRING"]) ? "?".$_SERVER["QUERY_STRING"]: ""));
 		}
 	} else {
 		if(UNIS_WILDCAST === true) {
@@ -56,40 +56,82 @@ function getUniverse()
 	return $UNI;
 }
 
-function getFactors($USER, $Type = 'basic', $TIME = 0) {
-	global $CONF, $resource, $pricelist;
+function getFactors($USER, $Type = 'basic', $TIME = NULL) {
+	global $CONF, $resource, $pricelist, $reslist;
 	if(empty($TIME))
 		$TIME	= TIMESTAMP;
 		
-	if($Type == 'basic') {
-		return array(
-			'shipspeed'		=> $USER[$resource[613]] * $pricelist[613]['info'] + DMExtra($USER[$resource[706]], $TIME, $pricelist[706]['add'], 0),
-			'bulidspeed'	=> 1 - $USER[$resource[605]] * $pricelist[605]['info'] - DMExtra($USER[$resource[702]], $TIME, $pricelist[702]['add'], 0),
-			'techspeed'		=> 1 - $USER[$resource[606]] * $pricelist[606]['info'] - DMExtra($USER[$resource[705]], $TIME, $pricelist[705]['add'], 0),
-			'fleetspeed'	=> 1 - $USER[$resource[604]] * $pricelist[604]['info'],
-			'defspeed'		=> 1 - $USER[$resource[608]] * $pricelist[608]['info'],
-			'ressource'	=> array(
-				901	=> 1 + ($USER[$resource[601]] * $pricelist[601]['info']) + ($USER[$resource[131]] * 0.02) + DMExtra($USER[$resource[703]], $TIME, $pricelist[703]['add'], 0),
-				902	=> 1 + ($USER[$resource[601]] * $pricelist[601]['info']) + ($USER[$resource[132]] * 0.02) + DMExtra($USER[$resource[703]], $TIME, $pricelist[703]['add'], 0),
-				903	=> 1 + ($USER[$resource[601]] * $pricelist[601]['info']) + ($USER[$resource[133]] * 0.02) + DMExtra($USER[$resource[703]], $TIME, $pricelist[703]['add'], 0),
-				911	=> 1 + ($USER[$resource[603]] * $pricelist[603]['info']) + DMExtra($USER[$resource[704]], $TIME, $pricelist[704]['add'], 0),
-			)
-		);
+	$factor	= array(
+		'Attack'			=> 0,
+		'Defensive'			=> 0,
+		'Shield'			=> 0,
+		'BuildTime'			=> 0,
+		'ResearchTime'		=> 0,
+		'ShipTime'			=> 0,
+		'DefensiveTime'		=> 0,
+		'Resource'			=> 0,
+		'Energy'			=> 0,
+		'ResourceStorage'	=> 0,
+		'ShipStorage'		=> 0,
+		'FlyTime'			=> 0,
+		'FleetSlots'		=> 0,
+		'Planets'			=> 0,
+	);
+	
+	foreach($reslist['bonus'] as $elementID) {
+		$bonus = $pricelist[$elementID]['bonus'];
+		
+		if (isset($PLANET[$resource[$elementID]])) {
+			$elementLevel = $PLANET[$resource[$elementID]];
+		} elseif (isset($USER[$resource[$elementID]])) {
+			$elementLevel = $USER[$resource[$elementID]];
+		} else {
+			continue;
+		}
+		
+		if(in_array($elementID, $reslist['dmfunc'])) {
+			if(DMExtra($elementLevel, $TIME, false, true)) {
+				continue;
+			}
+			
+			$factor['Attack']			+= $bonus['Attack'];
+			$factor['Defensive']		+= $bonus['Defensive'];
+			$factor['Shield']			+= $bonus['Shield'];
+			$factor['BuildTime']		+= $bonus['BuildTime'];
+			$factor['ResearchTime']		+= $bonus['ResearchTime'];
+			$factor['ShipTime']			+= $bonus['ShipTime'];
+			$factor['DefensiveTime']	+= $bonus['DefensiveTime'];
+			$factor['Resource']			+= $bonus['Resource'];
+			$factor['Energy']			+= $bonus['Energy'];
+			$factor['ResourceStorage']	+= $bonus['ResourceStorage'];
+			$factor['ShipStorage']		+= $bonus['ShipStorage'];
+			$factor['FlyTime']			+= $bonus['FlyTime'];
+			$factor['FleetSlots']		+= $bonus['FleetSlots'];
+			$factor['Planets']			+= $bonus['Planets'];
+		} else {
+			$factor['Attack']			+= $elementLevel * $bonus['Attack'];
+			$factor['Defensive']		+= $elementLevel * $bonus['Defensive'];
+			$factor['Shield']			+= $elementLevel * $bonus['Shield'];
+			$factor['BuildTime']		+= $elementLevel * $bonus['BuildTime'];
+			$factor['ResearchTime']		+= $elementLevel * $bonus['ResearchTime'];
+			$factor['ShipTime']			+= $elementLevel * $bonus['ShipTime'];
+			$factor['DefensiveTime']	+= $elementLevel * $bonus['DefensiveTime'];
+			$factor['Resource']			+= $elementLevel * $bonus['Resource'];
+			$factor['Energy']			+= $elementLevel * $bonus['Energy'];
+			$factor['ResourceStorage']	+= $elementLevel * $bonus['ResourceStorage'];
+			$factor['ShipStorage']		+= $elementLevel * $bonus['ShipStorage'];
+			$factor['FlyTime']			+= $elementLevel * $bonus['FlyTime'];
+			$factor['FleetSlots']		+= $elementLevel * $bonus['FleetSlots'];
+			$factor['Planets']			+= $elementLevel * $bonus['Planets'];
+		}
 	}
-
-	if($Type == 'attack') {
-		return array(
-			'attack'		=> $USER[$resource[602]] * $pricelist[602]['info'] + DMExtra($USER[$resource[700]], $TIME, $pricelist[700]['add'], 0),
-			'defensive'		=> $USER[$resource[602]] * $pricelist[602]['info'] + DMExtra($USER[$resource[701]], $TIME, $pricelist[701]['add'], 0),
-			'shield'		=> $USER[$resource[602]] * $pricelist[602]['info'],
-		);
-	}
+	
+	return $factor;
 }
 
 function getPlanets($USER)
 {
-	global $db;
-	if(isset($USER['PLANETS']))
+		if(isset($USER['PLANETS']))
 		return $USER['PLANETS'];
 		
 	$Order = $USER['planet_sort_order'] == 1 ? "DESC" : "ASC" ;
@@ -104,65 +146,90 @@ function getPlanets($USER)
 	elseif ($Sort == 2)
 		$QryPlanets .= "`name` ". $Order;
 
-	$PlanetRAW = $db->query($QryPlanets);
+	$PlanetRAW = $GLOBALS['DATABASE']->query($QryPlanets);
 	
-	while($Planet = $db->fetch_array($PlanetRAW))
+	while($Planet = $GLOBALS['DATABASE']->fetch_array($PlanetRAW))
 		$Planets[$Planet['id']]	= $Planet;
 
-	$db->free_result($PlanetRAW);
+	$GLOBALS['DATABASE']->free_result($PlanetRAW);
 	return $Planets;
 }
 
-function tz_dst($timezone) {
-	if($timezone == $GLOBALS['CONF']['timezone'])
-		return (int) date("I");
+function get_timezone_selector() {
+	global $LNG;
 	
-	$OLD	= date_default_timezone_get();
-	$DST	= (int) date("I");
-	return $DST;
-}
+	// New Timezone Selector, better support for changes in tzdata (new russian timezones, e.g.)
+	// http://www.php.net/manual/en/datetimezone.listidentifiers.php
+	
+	$timezones = array();
+	$timezone_identifiers = DateTimeZone::listIdentifiers();
 
-function tz_getlist() {
-	return array('-12', '-11', '-10', '-9.5', '-9', '-8', '-7', '-6', '-5', '-4.5', '-4', '-3.5', '-3', '-2', '-1', '0', '1', '2', '3', '3.5', '4', '4.5', '5', '5.5', '5.75', '6', '6.5', '7', '8', '8.75', '9', '9.5', '10', '10.5', '11', '11.5', '12', '12.75', '13', '14');
-}
-
-function tz_diff() {
-	$UTC		=  (int) date("Z");
-
-	if(isset($GLOBALS['USER'])) {
-		$timezone	= (float) $GLOBALS['USER']['timezone'];
-		$DST		= $GLOBALS['USER']['dst'];
-	} elseif(isset($_SESSION['USER'])) {
-		$timezone	= (float) $_SESSION['USER']['timezone'];
-		$DST		= $_SESSION['USER']['dst'];
+	foreach( $timezone_identifiers as $value )
+	{
+		if ( preg_match( '/^(America|Antartica|Arctic|Asia|Atlantic|Europe|Indian|Pacific)\//', $value ) )
+		{
+			$ex=explode('/',$value); //obtain continent,city
+			$city = isset($ex[2])? $ex[1].' - '.$ex[2]:$ex[1]; //in case a timezone has more than one
+			$timezones[$ex[0]][$value] = str_replace('_', ' ', $city);
+		}
 	}
-	if($DST == 2)
-		$DST		= tz_dst($timezone);
-	
-	return (($timezone + $DST) * 3600) - $UTC;
+	return $timezones; 
 }
 
-function tz_date($time, $Dateformat = '', $LNG = array(), $ToGMT = false) {
-	if(!$ToGMT)
-		$time		= $time + tz_diff();
-	else
-		$time		= $time + (int) date("Z") - (int) date("I");
-	
-	if(empty($LNG))
-		$LNG		= $GLOBALS['LNG'];
-			
-	if(empty($Dateformat))
-		$Dateformat	= $LNG['php_tdformat'];
-	
-	$Dateformat	= str_replace(array('D', 'M'), array("XXX", "YYY"), $Dateformat);
-	$Dateformat	= str_replace(array("XXX", "YYY"), array(addcslashes($LNG['week_day'][(date('w', $time))], 'A..z'), addcslashes($LNG['months'][(date('n', $time) - 1)], 'A..z')), $Dateformat);
+function locale_date_format($format, $time, $LNG = NULL) {
 
-	return date($Dateformat, $time);
+	//Workaound for locale Names.
+
+	if(!isset($LNG)) {
+		$LNG	= $GLOBALS['LNG'];		
+	}
+	
+	$weekDay	= date('w', $time);
+	$months		= date('n', $time) - 1;
+	
+	$format     = str_replace(array('D', 'M'), array('$D$', '$M$'), $format);
+	$format		= str_replace('$D$', addcslashes($LNG['week_day'][$weekDay], 'A..z'), $format);
+	$format		= str_replace('$M$', addcslashes($LNG['months'][$months], 'A..z'), $format);
+	
+	return $format;
+}
+
+function _date($format, $time = null, $toTimeZone = null, $LNG = NULL) {
+	global $CONF;
+	
+	if(!isset($time)) {
+		$time	= TIMESTAMP;
+	}
+	
+	if(isset($toTimeZone))
+	{
+		$date = new DateTime();
+		if(method_exists($date, 'setTimestamp'))
+		{	// PHP > 5.3			
+			$date->setTimestamp($time);
+		} else {
+			// PHP < 5.3
+			$tempDate = getdate((int) $time);
+			$date->setDate($tempDate['year'], $tempDate['mon'], $tempDate['mday']);
+			$date->setTime($tempDate['hours'], $tempDate['minutes'], $tempDate['seconds']);
+		}
+		
+		$time	-= $date->getOffset();
+		try {
+			$date->setTimezone(new DateTimeZone($toTimeZone));
+		} catch (Exception $e) {
+			
+		}
+		$time	+= $date->getOffset();
+	}
+	
+	$format	= locale_date_format($format, $time, $LNG);
+	return date($format, $time);
 }
 
 function update_config($Values, $UNI = 0)
 {
-	global $CONF, $db;
+	global $CONF;
 	$SQLBASE	= "";
 	$SQLUNI		= "";
 	$UNI		= (empty($UNI)) ? $GLOBALS['UNI'] : $UNI;
@@ -176,26 +243,25 @@ function update_config($Values, $UNI = 0)
 		
 		$CONF[$Name]	= $Value;
 		if(in_array($Name, $BasicConf))
-			$SQLBASE	.= "`".$Name."` = '".$db->sql_escape($Value)."', ";
+			$SQLBASE	.= "`".$Name."` = '".$GLOBALS['DATABASE']->sql_escape($Value)."', ";
 		else
-			$SQLUNI		.= "`".$Name."` = '".$db->sql_escape($Value)."', ";
+			$SQLUNI		.= "`".$Name."` = '".$GLOBALS['DATABASE']->sql_escape($Value)."', ";
 	}
 	if(!empty($SQLBASE))
-		$db->query("UPDATE ".CONFIG." SET ".substr($SQLBASE, 0, -2).";");
+		$GLOBALS['DATABASE']->query("UPDATE ".CONFIG." SET ".substr($SQLBASE, 0, -2).";");
 	
 	if(!empty($SQLUNI))
-		$db->query("UPDATE ".CONFIG." SET ".substr($SQLUNI, 0, -2)." WHERE `uni` = '".$UNI."';");
+		$GLOBALS['DATABASE']->query("UPDATE ".CONFIG." SET ".substr($SQLUNI, 0, -2)." WHERE `uni` = '".$UNI."';");
 	
 }
 
 function getConfig($UNI) {
-	global $db;
-	if(isset($GLOBALS['CONFIG'][$UNI]))
+		if(isset($GLOBALS['CONFIG'][$UNI]))
 		return $GLOBALS['CONFIG'][$UNI];
 		
-	$CONF = $db->uniquequery("SELECT HIGH_PRIORITY * FROM `".CONFIG."` WHERE `uni` = '".$UNI."';");
+	$CONF = $GLOBALS['DATABASE']->uniquequery("SELECT HIGH_PRIORITY * FROM `".CONFIG."` WHERE `uni` = '".$UNI."';");
 	if(!isset($CONF))
-		redirectTo('index.php');
+		HTTP::redirectTo('index.php');
 		
 	$CONF['moduls']			= explode(";", $CONF['moduls']);
 
@@ -255,17 +321,17 @@ function pretty_time_hour ($seconds)
 
 function GetStartAdressLink($FleetRow, $FleetType)
 {
-	return '<a href="game.php?page=galaxy&amp;mode=3&amp;galaxy='.$FleetRow['fleet_start_galaxy'].'&amp;system='.$FleetRow['fleet_start_system'].'" class="'. $FleetType .'">['.$FleetRow['fleet_start_galaxy'].':'.$FleetRow['fleet_start_system'].':'.$FleetRow['fleet_start_planet'].']</a>';
+	return '<a href="game.php?page=galaxy&amp;galaxy='.$FleetRow['fleet_start_galaxy'].'&amp;system='.$FleetRow['fleet_start_system'].'" class="'. $FleetType .'">['.$FleetRow['fleet_start_galaxy'].':'.$FleetRow['fleet_start_system'].':'.$FleetRow['fleet_start_planet'].']</a>';
 }
 
 function GetTargetAdressLink($FleetRow, $FleetType)
 {
-	return '<a href="game.php?page=galaxy&amp;mode=3&amp;galaxy='.$FleetRow['fleet_end_galaxy'].'&amp;system='.$FleetRow['fleet_end_system'].'" class="'. $FleetType .'">['.$FleetRow['fleet_end_galaxy'].':'.$FleetRow['fleet_end_system'].':'.$FleetRow['fleet_end_planet'].']</a>';
+	return '<a href="game.php?page=galaxy&amp;galaxy='.$FleetRow['fleet_end_galaxy'].'&amp;system='.$FleetRow['fleet_end_system'].'" class="'. $FleetType .'">['.$FleetRow['fleet_end_galaxy'].':'.$FleetRow['fleet_end_system'].':'.$FleetRow['fleet_end_planet'].']</a>';
 }
 
 function BuildPlanetAdressLink($CurrentPlanet)
 {
-	return '<a href="game.php?page=galaxy&amp;mode=3&amp;galaxy='.$CurrentPlanet['galaxy'].'&amp;system='.$CurrentPlanet['system'].'">['.$CurrentPlanet['galaxy'].':'.$CurrentPlanet['system'].':'.$CurrentPlanet['planet'].']</a>';
+	return '<a href="game.php?page=galaxy&amp;galaxy='.$CurrentPlanet['galaxy'].'&amp;system='.$CurrentPlanet['system'].'">['.$CurrentPlanet['galaxy'].':'.$CurrentPlanet['system'].':'.$CurrentPlanet['planet'].']</a>';
 }
 
 function colorNumber($n, $s = '')
@@ -293,47 +359,9 @@ function pretty_number($n, $dec = 0)
 	return number_format(floattostring($n, $dec), $dec, ',', '.');
 }
 
-function request_var($var_name, $default, $multibyte = false, $specialtype = '')
-{
-	if(!isset($_REQUEST[$var_name]))
-		return $default;
-	
-	$var	= $_REQUEST[$var_name];
-	$type	= gettype($default);
-	settype($var, $type);
-	if ($type == 'string')
-	{
-		$var = trim(htmlspecialchars(str_replace(array("\r\n", "\r", "\0"), array("\n", "\n", ''), $var), ENT_COMPAT, 'UTF-8'));
-
-		if (!empty($var))
-		{
-			// Make sure multibyte characters are wellformed
-			if ($multibyte)
-			{
-				if (!preg_match('/^./u', $var))
-				{
-					$var = '';
-				}
-			}
-			else
-			{
-				// no multibyte, allow only ASCII (0-127)
-				$var = preg_replace('/[\x80-\xFF]/', '?', $var);
-			}
-		}
-	}
-	return $var;
-}
-
-function request_outofint($var_name, $Negative = false)
-{
-	return $Negative ? floor(request_var($var_name, 0.0)) : max(floor(request_var($var_name, 0.0)), 0) ;
-}
-
 function GetUserByID($UserID, $GetInfo = "*")
 {
-	global $db;
-	
+		
 	if(is_array($GetInfo)) {
 		$GetOnSelect = "";
 		foreach($GetInfo as $id => $col)
@@ -345,7 +373,7 @@ function GetUserByID($UserID, $GetInfo = "*")
 	else
 		$GetOnSelect = $GetInfo;
 	
-	$User = $db->uniquequery("SELECT ".$GetOnSelect." FROM ".USERS." WHERE `id` = '". $UserID ."';");
+	$User = $GLOBALS['DATABASE']->uniquequery("SELECT ".$GetOnSelect." FROM ".USERS." WHERE `id` = '". $UserID ."';");
 	return $User;
 }
 
@@ -388,8 +416,7 @@ function makebr($text)
 
 function CheckPlanetIfExist($Galaxy, $System, $Planet, $Universe, $Planettype = 1)
 {
-	global $db;
-	$QrySelectGalaxy = $db->countquery("SELECT COUNT(*) FROM ".PLANETS." WHERE `universe` = '".$Universe."' AND `galaxy` = '".$Galaxy."' AND `system` = '".$System."' AND `planet` = '".$Planet."' AND `planet_type` = '".$Planettype."';");
+		$QrySelectGalaxy = $GLOBALS['DATABASE']->countquery("SELECT COUNT(*) FROM ".PLANETS." WHERE `universe` = '".$Universe."' AND `galaxy` = '".$Galaxy."' AND `system` = '".$System."' AND `planet` = '".$Planet."' AND `planet_type` = '".$Planettype."';");
 	return $QrySelectGalaxy ? true : false;
 }
 
@@ -484,47 +511,43 @@ function exception_handler($exception)
 
 function SendSimpleMessage($Owner, $Sender, $Time, $Type, $From, $Subject, $Message)
 {
-	global $db;
-		
+			
 	$SQL	= "INSERT INTO ".MESSAGES." SET 
 	`message_owner` = ".(int) $Owner.", 
 	`message_sender` = ".(int) $Sender.", 
 	`message_time` = ".(int) $Time.", 
 	`message_type` = ".(int) $Type.", 
-	`message_from` = '".$db->sql_escape($From) ."', 
-	`message_subject` = '". $db->sql_escape($Subject) ."', 
-	`message_text` = '".$db->sql_escape($Message)."', 
+	`message_from` = '".$GLOBALS['DATABASE']->sql_escape($From) ."', 
+	`message_subject` = '". $GLOBALS['DATABASE']->sql_escape($Subject) ."', 
+	`message_text` = '".$GLOBALS['DATABASE']->sql_escape($Message)."', 
 	`message_unread` = '1', 
 	`message_universe` = ".$GLOBALS['UNI'].";";
 
-	$db->query($SQL);
+	$GLOBALS['DATABASE']->query($SQL);
 }
 
-function shortly_number($number)
+function shortly_number($number, $decial = NULL)
 {
-	$length	= strlen(floattostring(abs($number)));
-	if($length < 4)
-		return pretty_number($number);
-	elseif($length < 7)
-		return pretty_number($number/1000).' K';
-	elseif($length < 13)
-		return pretty_number($number/1000000).' M';
-	elseif($length < 19)
-		return pretty_number($number/1000000000000).' B';
-	elseif($length < 25)
-		return pretty_number($number/1000000000000000000).' T';
-	elseif($length < 31)
-		return pretty_number($number/1000000000000000000000000).' Q';
-	elseif($length < 37)
-		return pretty_number($number/1000000000000000000000000000000).' Q+';
-	elseif($length < 43)
-		return pretty_number($number/1000000000000000000000000000000000000).' S';
-	elseif($length < 49)
-		return pretty_number($number/1000000000000000000000000000000000000000000).' S+';
-	elseif($length < 55)
-		return pretty_number($number/1000000000000000000000000000000000000000000000000).' O';
-	else
-		return pretty_number($number/1000000000000000000000000000000000000000000000000000000).' N';
+	$negate	= $number < 0 ? -1 : 1;
+	$number	= abs($number);
+    $unit	= array("", "K", "M", "B", "T", "Q", "Q+", "S", "S+", "O", "N");
+	$key	= 0;
+	
+	if($number >= 1000000) {
+		++$key;
+		while($number >= 1000000)
+		{
+			++$key;
+			$number = $number / 1000000;
+		}
+	} elseif($number >= 1000) {
+		++$key;
+		$number = $number / 1000;
+	}
+	
+	$decial	= !is_numeric($decial) ? ((int) ($number != 0 && $number < 100)) : $decial;
+	
+	return pretty_number($negate * $number, $decial).'&nbsp;'.$unit[$key];
 }
 
 function floattostring($Numeric, $Pro = 0, $Output = false){
@@ -537,12 +560,6 @@ function isModulAvalible($ID)
 		$GLOBALS['CONF']['moduls'][$ID] = 1;
 	
 	return $GLOBALS['CONF']['moduls'][$ID] == 1 || (isset($_SESSION) && $_SESSION['authlevel'] > AUTH_USR);
-}
-
-function redirectTo($URL)
-{
-	header('Location: '.HTTP_PATH.$URL);
-	exit;
 }
 
 function ClearCache()
@@ -561,6 +578,33 @@ function ClearCache()
 
 function MaxPlanets($Level, $Universe)
 {
+	// http://owiki.de/index.php/Astrophysik#.C3.9Cbersicht
+	return min($GLOBALS['CONFIG'][$Universe]['min_player_planets'] + ceil($Level / 2) * PLANETS_PER_TECH, $GLOBALS['CONFIG'][$Universe]['max_player_planets']);
+}
+
+function allowPlanetPosition($Pos, $techLevel)
+{
+	// http://owiki.de/index.php/Astrophysik#.C3.9Cbersicht
+	
+	switch($Pos) {
+		case 1:
+		case 15:
+			return $techLevel >= 8;
+		break;
+		case 2:
+		case 14:
+			return $techLevel >= 6;
+		break;
+		case 3:
+		case 13:
+			return $techLevel >= 4;
+		break;
+		default:
+			return $techLevel >= 1;
+		break;
+	}
+	
+	
 	return min($GLOBALS['CONFIG'][$Universe]['min_player_planets'] + ceil($Level / 2) * PLANETS_PER_TECH, $GLOBALS['CONFIG'][$Universe]['max_player_planets']);
 }
 
@@ -589,7 +633,8 @@ function r_implode($glue, $pieces)
 
 function allowedTo($side)
 {
-	return ($GLOBALS['USER']['authlevel'] == AUTH_ADM || $GLOBALS['USER']['rights'][$side] == 1);
+	global $USER;
+	return ($USER['authlevel'] == AUTH_ADM || (isset($USER['rights']) && $USER['rights'][$side] == 1));
 }
 
 function isactiveDMExtra($Extra, $Time) {
@@ -600,7 +645,6 @@ function DMExtra($Extra, $Time, $true, $false) {
 	return isactiveDMExtra($Extra, $Time) ? $true : $false;
 }
 
-
 function getRandomString() {
 	return md5(uniqid());
 }
@@ -610,11 +654,25 @@ function isVacationMode($USER)
 	return ($USER['urlaubs_modus'] == 1) ? true : false;
 }
 
-if(!function_exists('ctype_alnum')):
-
-function ctype_alnum($test){
-	return preg_match("/[^A-z0-9_\- ]/", $test) != 1;
+function cryptPassword($password)
+{
+	// http://www.phpgangsta.de/schoener-hashen-mit-bcrypt
+	global $resource, $salt;
+	if(!CRYPT_BLOWFISH || !isset($salt))
+	{
+		return md5($password);
+	} else {
+		return crypt($password, '$2a$09$'.$salt.'$');
+	}
 }
 
-endif;
+function clearGIF() {
+	header('Cache-Control: no-cache');
+	header('Content-type: image/gif');
+	header('Content-length: 43');
+	header('Expires: 0');
+	echo("\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x21\xF9\x04\x01\x00\x00\x00\x00\x2C\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3B");
+	exit;
+}
+
 ?>

@@ -4,17 +4,11 @@ var Gate	= {
 	},
 	
 	submit: function() {
-		$.getJSON('?page=infos&gid=43&action=send&'+$('.jumpgate').serialize(), function(data) {
+		$.getJSON('?page=information&mode=sendFleet&'+$('.jumpgate').serialize(), function(data) {
 			if(data.error)
 				Dialog.alert(data.message);
 			else
 				Dialog.alert(data.message, Dialog.close);
 		});		
-	},
-	
-	time: function() {
-		$('#bxxGate1').text(function(i, sec){
-			return GetRestTimeFormat(sec);
-		})
 	}
 }

@@ -29,148 +29,102 @@
 
 if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FILE__))) exit;
 		
-function ShowSupportPage()
+class ShowSupportPage
 {
-	global $USER, $LNG, $db;
-
-	$template			= new template();
-	$ID	= request_var('id', 0);
+	private $ticketObj;
 	
-	switch($_GET['action'])
+	function __construct() 
 	{
-		case 'send':
-			$text	= nl2br(request_var('text', '', true));
-			if(empty($text)){
-				$template->message($LNG['sendit_error_msg'], '?page=support&action=detail&id='.$ID);
-				exit;
-			}
-
-			$ticket = $db->uniquequery("SELECT `player_id`, `text` FROM ".SUPP." WHERE `id` = '".$ID."';");
-			$newtext = $ticket['text'].'<br><br><hr>'.sprintf($LNG['sp_admin_answer'], $USER['username'], tz_date(TIMESTAMP), $text);
-
-			$SQL  = "UPDATE ".SUPP." SET ";
-			$SQL .= "`text` = '".$db->sql_escape($newtext)."',";
-			$SQL .= "`time` = '".TIMESTAMP."',";
-			$SQL .= "`status` = '2'";
-			$SQL .= "WHERE ";
-			$SQL .= "`id` = '".$ID."' ";
-			$db->query($SQL);
-			SendSimpleMessage($ticket['player_id'], 0, TIMESTAMP, 4, $USER['username'], sprintf($LNG['sp_answer_message_title'], $ID), sprintf($LNG['sp_answer_message'], $ID)); 
-		break;
-		case 'open':
-			$ticket = $db->uniquequery("SELECT text FROM ".SUPP." WHERE `id` = '".$ID."';");
-			$newtext = $ticket['text'].'<br><br><hr>'.sprintf($LNG['sp_admin_open'], $USER['username'], tz_date(TIMESTAMP));
-			$SQL  = "UPDATE ".SUPP." SET ";
-			$SQL .= "`text` = '".$db->sql_escape($newtext)."',";
-			$SQL .= "`time` = '".TIMESTAMP."',";
-			$SQL .= "`status` = '2'";
-			$SQL .= "WHERE ";
-			$SQL .= "`id` = '".$ID."' ";
-			$db->query($SQL);
-		break;
-		case 'close':
-			$ticket = $db->uniquequery("SELECT text FROM ".SUPP." WHERE `id` = '".$ID."';");
-			$newtext = $ticket['text'].'<br><br><hr>'.sprintf($LNG['sp_admin_closed'], $USER['username'], tz_date(TIMESTAMP));
-			$SQL  = "UPDATE ".SUPP." SET ";
-			$SQL .= "`text` = '".$db->sql_escape($newtext)."',";
-			$SQL .= "`time` = '".TIMESTAMP."',";
-			$SQL .= "`status` = '0'";
-			$SQL .= "WHERE ";
-			$SQL .= "`id` = '".$ID."' ";
-			$db->query($SQL);
-		break;
-	}
-	
-	$tickets	= array('open' => array(), 'closed' => array());
-	$query = $db->query("SELECT s.*, u.username FROM ".SUPP." as s, ".USERS." as u WHERE u.id = s.player_id ORDER BY s.time;");
-	while($ticket = $db->fetch_array($query))
-	{
-		switch($ticket['status']){
-			case 0:
-				$status = '<font color="red">'.$LNG['supp_close'].'</font>';
-			break;
-			case 1:
-				$status = '<font color="green">'.$LNG['supp_open'].'</font>';
-			break;
-			case 2:
-				$status = '<font color="orange">'.$LNG['supp_admin_answer'].'</font>';
-			break;
-			case 3:
-				$status = '<font color="green">'.$LNG['supp_player_answer'].'</font>';
-			break;
-		}
-		
-		if($_GET['action'] == 'detail' && $ID == $ticket['ID'])
-			$TINFO	= $ticket;
-			
-		if($ticket['status'] == 0){					
-			$tickets['closed'][]	= array(
-				'id'		=> $ticket['ID'],
-				'username'	=> $ticket['username'],
-				'subject'	=> $ticket['subject'],
-				'status'	=> $status,
-				'date'		=> tz_date($ticket['time'])
-			);	
+		require(ROOT_PATH.'includes/classes/class.SupportTickets.php');
+		$this->ticketObj	= new SupportTickets;
+		$this->tplObj		= new template();
+		// 2Moons 1.7TO1.6 PageClass Wrapper
+		$ACTION = HTTP::_GP('mode', 'show');
+		if(!is_callable(array($this, $mode))) {
+			$this->{$ACTION}();
 		} else {
-			$tickets['open'][]	= array(
-				'id'		=> $ticket['ID'],
-				'username'	=> $ticket['username'],
-				'subject'	=> $ticket['subject'],
-				'status'	=> $status,
-				'date'		=> tz_date($ticket['time'])
-			);
-		}
-		
+			$this->show();
+        }
 	}
 	
-	if($_GET['action'] == 'detail')
+	public function show()
 	{
-		if($TINFO['status'] != 0)
-			unset($tickets['closed']);
+		global $USER, $LNG;
+				
+		$ticketResult	= $GLOBALS['DATABASE']->query("SELECT t.*, u.username, COUNT(a.ticketID) as answer FROM ".TICKETS." t INNER JOIN ".TICKETS_ANSWER." a USING (ticketID) INNER JOIN ".USERS." u ON u.id = t.ownerID WHERE t.universe = ".$_SESSION['adminuni']." GROUP BY a.ticketID ORDER BY t.ticketID DESC;");
+		$ticketList		= array();
 		
-		switch($TINFO['status']){
-			case 0:
-				$status = '<font color="red">'.$LNG['supp_close'].'</font>';
-			break;
-			case 1:
-				$status = '<font color="green">'.$LNG['supp_open'].'</font>';
-			break;
-			case 2:
-				$status = '<font color="orange">'.$LNG['supp_admin_answer'].'</font>';
-			break;
-			case 3:
-				$status = '<font color="green">'.$LNG['supp_player_answer'].'</font>';
-			break;
-		}		
+		while($ticketRow = $GLOBALS['DATABASE']->fetch_array($ticketResult)) {
+			$ticketRow['time']	= _date($LNG['php_tdformat'], $ticketRow['time'], $USER['timezone']);
+
+			$ticketList[$ticketRow['ticketID']]	= $ticketRow;
+		}
+		
+		$GLOBALS['DATABASE']->free_result($ticketResult);
+		
+		$this->tplObj->assign_vars(array(	
+			'ticketList'	=> $ticketList
+		));
 			
-		$template->assign_vars(array(
-			't_id'			=> $TINFO['ID'],
-			't_username'	=> $TINFO['username'],
-			't_statustext'	=> $status,
-			't_status'		=> $TINFO['status'],
-			't_text'		=> $TINFO['text'],
-			't_subject'		=> $TINFO['subject'],
-			't_date'		=> tz_date($TINFO['time']),
-			'text'			=> $LNG['text'],
-			'answer_new'	=> $LNG['answer_new'],
-			'button_submit'	=> $LNG['button_submit'],
-			'open_ticket'	=> $LNG['open_ticket'],
-			'close_ticket'	=> $LNG['close_ticket'],
-		));	
-	}	
+		$this->tplObj->show('page.ticket.default.tpl');
+	}
 	
-	$template->assign_vars(array(
-		'tickets'			=> $tickets,
-		'supp_header'		=> $LNG['supp_header'],
-		'supp_header_g'		=> $LNG['supp_header_g'],
-		'ticket_id'			=> $LNG['ticket_id'],
-		'player'			=> $LNG['player'],
-		'subject'			=> $LNG['subject'],
-		'status'			=> $LNG['status'],
-		'ticket_posted'		=> $LNG['ticket_posted'],
-	));
-
-	$template->show('SupportPage.tpl');
-
+	function send() 
+	{
+		global $USER, $UNI, $LNG;
+				
+		$ticketID	= HTTP::_GP('id', 0);
+		$category	= HTTP::_GP('category', 0);
+		$message	= HTTP::_GP('message', '', true);
+		$change		= HTTP::_GP('change_status', '', true);
+		
+		$ticketDetail	= $GLOBALS['DATABASE']->uniquequery("SELECT ownerID, subject, status FROM ".TICKETS." WHERE ticketID = ".$ticketID.";");
+		$status = ($change ? ($ticketDetail['status'] <= 1 ? 2 : 1) : $ticketDetail['status']);
+		if(empty($message)) {
+			if ($status == 2 && $change) {
+				$message = $LNG['ti_admin_close'];
+			} elseif ($status == 1 && $change) {
+				$message = $LNG['ti_admin_open'];
+			} else {
+				HTTP::redirectTo('admin.php?page=support&mode=view&id='.$ticketID);
+			}
+		}
+		$subject		= "RE: ".$ticketDetail['subject'];
+		
+		$this->ticketObj->createAnswer($ticketID, $USER['id'], $USER['username'], $subject, $message, $status);
+		
+		SendSimpleMessage($ticketDetail['ownerID'], 0, TIMESTAMP, 4, $USER['username'], sprintf($LNG['sp_answer_message_title'], $ticketID), sprintf($LNG['sp_answer_message'], $ticketID)); 
+		HTTP::redirectTo('admin.php?page=support&mode=view&id='.$ticketID);
+	}
+	
+	function view() 
+	{
+		global $USER, $LNG;
+				
+		$ticketID			= HTTP::_GP('id', 0);
+		$answerResult		= $GLOBALS['DATABASE']->query("SELECT a.*, t.categoryID, t.status FROM ".TICKETS_ANSWER." a INNER JOIN ".TICKETS." t USING(ticketID) WHERE a.ticketID = ".$ticketID." ORDER BY a.answerID;");
+		$answerList			= array();
+		
+		while($answerRow = $GLOBALS['DATABASE']->fetch_array($answerResult)) {
+			if (empty($ticket_status))
+				$ticket_status = $answerRow['status'];
+			$answerRow['time']	= _date($LNG['php_tdformat'], $answerRow['time'], $USER['timezone']);
+			
+			$answerList[$answerRow['answerID']]	= $answerRow;
+		}
+		
+		$GLOBALS['DATABASE']->free_result($answerResult);
+			
+		$categoryList	= $this->ticketObj->getCategoryList();
+		
+		$this->tplObj->assign_vars(array(
+			'ticketID'		=> $ticketID,
+			'ticket_status' => $ticket_status,
+			'categoryList'	=> $categoryList,
+			'answerList'	=> $answerList,
+		));
+			
+		$this->tplObj->show('page.ticket.view.tpl');		
+	}
 }	
 ?>

@@ -72,7 +72,7 @@ switch($MODE) {
 				if(($ERROR	= DLFile($FILE)) !== true) {
 					echo json_encode(array('status' => $ERROR, 'error' => true));
 				} else {
-					$db->multi_query(str_replace('prefix_', $database['tableprefix'], file_get_contents(ROOT_PATH.$FILE)));
+					$GLOBALS['DATABASE']->multi_query(str_replace('prefix_', $database['tableprefix'], file_get_contents(ROOT_PATH.$FILE)));
 					echo json_encode(array('status' => 'OK', 'error' => false));
 				}
 			} catch (Exception $ERROR) {
@@ -126,7 +126,7 @@ switch($MODE) {
 		echo json_encode(array('status' => 'OK', 'error' => false));	
 	break;
 	case 'update':
-		$db->query("UPDATE ".$database['tableprefix']."config SET `VERSION` = '1.5.".$REV."';");
+		$GLOBALS['DATABASE']->query("UPDATE ".$database['tableprefix']."config SET `VERSION` = '1.5.".$REV."';");
 	break;
 	case 'unlink':
 		unlink(__FILE__);

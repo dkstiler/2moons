@@ -27,56 +27,50 @@
  * @link http://code.google.com/p/2moons/
  */
 
-define('INSIDE'  , true);
-define('AJAX', true );
+define('MODE', 'INDEX');
 
 define('ROOT_PATH', str_replace('\\', '/',dirname(__FILE__)).'/');
-require(ROOT_PATH . 'includes/common.php');
-require(ROOT_PATH . 'includes/classes/class.template.php');
 
-if(isset($_SESSION['USER']))
-	$LANG->setUser($_SESSION['USER']['lang']);	
-else
-	$LANG->GetLangFromBrowser();
-	
-$LANG->includeLang(array('L18N', 'FLEET', 'TECH'));
-	
-$RID		= request_var('raport', 0);
-$Fame		= request_var('fame', 0);
-if($Fame == 1) {
-	$Raport		= $db->uniquequery("SELECT 
-									`raport`, `time`,
-									(
-										SELECT 
-										GROUP_CONCAT(username SEPARATOR ' & ') as attacker
-										FROM ".USERS." 
-										WHERE `id` IN (SELECT `uid` FROM ".TOPKB_USERS." WHERE ".TOPKB_USERS.".`rid` = ".RW.".`rid` AND `role` = 1)
-									) as `attacker`,
-									(
-										SELECT 
-										GROUP_CONCAT(username SEPARATOR ' & ') as defender
-										FROM ".USERS." 
-										WHERE `id` IN (SELECT `uid` FROM ".TOPKB_USERS." WHERE ".TOPKB_USERS.".`rid` = ".RW.".`rid` AND `role` = 2)
-									) as `defender`
-									FROM ".RW."
-									WHERE `rid` = ".$RID.";");
-	$Info		= array($Raport["attacker"], $Raport["defender"]);
+require(ROOT_PATH.'includes/common.php');
+require(ROOT_PATH.'includes/pages/game/class.AbstractPage.php');
+require(ROOT_PATH.'includes/pages/game/class.ShowErrorPage.php');
+
+if($SESSION->IsUserLogin()) {
+	$USER	= $GLOBALS['DATABASE']->uniquequery("SELECT id, authlevel, timezone, lang, urlaubs_modus FROM ".USERS." WHERE id = ".$_SESSION['id'].";");
 } else {
-	$Raport		= $db->uniquequery("SELECT `raport` FROM ".RW." WHERE `rid` = ".$RID.";");
-	$Info		= array();
+
+	// Simluate User
+	// It isn't clean, but i haven't others solutions at this time.
+	
+	$USER	= array(
+		'lang'	=> $LANG->GetLangFromBrowser(),
+		'timezone'	=> $CONF['timezone'],
+		'urlaubs_modus'	=> 0,
+		'authlevel'	=> 0
+	);
 }
 
-$template	= new template();
-if(!isset($Raport)) {
-	$template->message($LNG['sys_raport_not_found'], 0, false, true);
-	exit;
+$LANG->setUser($USER['lang']);
+$LANG->includeLang(array('L18N', 'INGAME', 'TECH', 'FLEET', 'CUSTOM'));
+
+require(ROOT_PATH.'includes/pages/game/class.ShowRaportPage.php');
+
+$pageObj	= new ShowRaportPage;
+$mode		= HTTP::_GP('mode', 'show');
+
+// PHP 5.2 FIX
+// can't use $pageObj::$requireModule
+$pageProps	= get_class_vars(get_class($pageObj));
+
+if(!is_callable(array($pageObj, $mode))) {	
+	if(!isset($pageProps['defaultController']) || !is_callable(array($pageObj, $pageProps['defaultController']))) {
+		ShowErrorPage::printError($LNG['page_doesnt_exist']);
+	}
+	
+	$mode	= $pageProps['defaultController'];
 }
-$template->isPopup(true);
-$template->assign_vars(array(
-	'Raport'	=> unserialize($Raport["raport"]),
-	'Info'		=> $Info,
-	'fame'		=> $Fame
-));
-$template->show('CombatRaport.tpl');
+
+$pageObj->{$mode}();
+
 
 ?>

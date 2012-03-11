@@ -37,150 +37,185 @@ define('HTTP_ROOT'					, str_replace('\\', '/', str_replace(basename($_SERVER['S
 define('HTTP_HOST'					, $_SERVER['HTTP_HOST']);
 define('HTTP_PATH'					, PROTOCOL.HTTP_HOST.HTTP_ROOT);
 
-defined('AJAX_CHAT_PATH') || define('AJAX_CHAT_PATH', ROOT_PATH.'/chat/');
+if(!defined('AJAX_CHAT_PATH')) {
+	define('AJAX_CHAT_PATH', ROOT_PATH.'/chat/');
+}
 
-define('DEFAULT_LANG'             , "de"); // For Fatal Errors!
-define('PHPEXT'                   , "php");
+if(!defined('CACHE_PATH')) {
+	define('CACHE_PATH', ROOT_PATH.'/cache/');
+}
+
+// For Fatal Errors!
+define('DEFAULT_LANG'				, 'de');
 
 // SUPPORT WILDCAST DOMAINS
-define('UNIS_WILDCAST'			  , false);
+define('UNIS_WILDCAST'				, false);
 
 // SUPPORT MULTIPLY UNIVERSE VIA HTACCESS (BETA; COMMENT OUT THE REWRITE SELECTION)
-define('UNIS_HTACCESS'			  , false);
-
-// SUPPORT OWN vars.php / UNIVERSE | NOTE: make a COPY of vars.php and rename it to vars_uni1.php,  vars_uni2.php, etc...
-define('UNIS_MULTIVARS'			  , false);
-
-// NUMBER OF COLUMNS FOR SPY REPORTS
-define('SPY_REPORT_ROW'           , 2);
+define('UNIS_HTACCESS'				, false);
 
 // FIELDS FOR EACH LEVEL OF THE LUNAR BASE
-define('FIELDS_BY_MOONBASIS_LEVEL', 3);
+define('FIELDS_BY_MOONBASIS_LEVEL'	, 3);
 
 // FIELDS FOR EACH LEVEL OF THE TERRAFORMER
-define('FIELDS_BY_TERRAFORMER'	  , 5);
+define('FIELDS_BY_TERRAFORMER'		, 5);
 
 // TIME IN SECONDS, TO (i) APPEAR ON GALAXY
-define('INACTIVE'				  , 604800);
+define('INACTIVE'					, 604800);
 
 // TIME IN SECONDS, TO (i I) APPEAR ON GALAXY
-define('INACTIVE_LONG'			  , 2419200);
+define('INACTIVE_LONG'				, 2419200);
 
 // FEE FOR CANCEL QUEUE IN SHIPYARD
-define('FACTOR_CANCEL_SHIPYARD'	  , 0.6);
+define('FACTOR_CANCEL_SHIPYARD'		, 0.6);
 
 // ADDED PLANET PRO 2 TECH LEVELS
-define('PLANETS_PER_TECH' 		  , 1);	
+define('PLANETS_PER_TECH'			, 1);	
 
 // MINIMUM FLEET TIME
-define('MIN_FLEET_TIME' 		  , 5);	
+define('MIN_FLEET_TIME'				, 5);	
+
+// PHALANX COST'S
+define('PHALANX_DEUTERIUM'			, 5000);	
 
 // Time of changable nick after changing nick.
-define('USERNAME_CHANGETIME'	  , 604800);
+define('USERNAME_CHANGETIME'		, 604800);
 
 // Factor for Metal/Crystal and Deuterium Storages
-define('STORAGE_FACTOR'			  , 1.0);
+define('STORAGE_FACTOR'				, 1.0);
 
 // Max Results in Searchpage (-1 = disable)
-define('SEARCH_LIMIT'	  	 	  , 25);
+define('SEARCH_LIMIT'				, 25);
+
+// Messages per page at message list
+define('MESSAGES_PER_PAGE'			, 10);
+
+// banned users per page at ban list
+define('BANNED_USERS_PER_PAGE'		, 25);
 
 // How much IP Block ll be checked
 // 1 = (AAA); 2 = (AAA.BBB); 3 = (AAA.BBB.CCC)
-define('COMPARE_IP_BLOCKS'	  	  , 2);
+define('COMPARE_IP_BLOCKS'			, 2);
 
 // Max Round on Combats
-define('MAX_ATTACK_ROUNDS'		  , 6);
+define('MAX_ATTACK_ROUNDS'			, 6);
 
 // Enable the one-Click SImulation on Spy-Raports
-define('ENABLE_SIMULATOR_LINK'    , true);
-
-// Planetrows on overview
-define('PLANET_ROWS_ON_OVERVIEW'  , 2);
+define('ENABLE_SIMULATOR_LINK'		, true);
 
 // Max. User Session in Seconds
-define('SESSION_LIFETIME'		  , 43200);
+define('SESSION_LIFETIME'			, 43200);
 
 // DISCLAMER INFOS
-define('DICLAMER_NAME'            , "Edit constans.php!");
-define('DICLAMER_ADRESS1'         , "Edit constans.php!");
-define('DICLAMER_ADRESS2'         , "Edit constans.php!");
-define('DICLAMER_TEL'     		  , "Edit constans.php!");
-define('DICLAMER_EMAIL'    		  , "Edit constans.php!");
+define('DICLAMER_NAME'				, "Edit constans.php!");
+define('DICLAMER_ADRESS1'			, "Edit constans.php!");
+define('DICLAMER_ADRESS2'			, "Edit constans.php!");
+define('DICLAMER_TEL'				, "Edit constans.php!");
+define('DICLAMER_EMAIL'				, "Edit constans.php!");
 
-// UTF-8 Support for Names (Requried for non-english Chars!)
-define('UTF8_SUPPORT'          	  , true);
+// UTF-8 support for names (required for non-english chars!)
+define('UTF8_SUPPORT'				, true);
 
 // Bash Settings
-define('BASH_ON'        	  	  , false);	
-define('BASH_COUNT'          	  , 6);	
-define('BASH_TIME'          	  , 86400);	
+define('BASH_ON'					, false);	
+define('BASH_COUNT'					, 6);	
+define('BASH_TIME'					, 86400);	
 
-// Invisible Missions for Phalanx
-// Exsample: 1,4,7,10
+// Bash rule on wars:
+// 0 = NORMAL
+// 1 = ON WAR, BASH RULE IS DEACTIVE
+define('BASH_WAR'					, 0);
 
-define('INV_PHALANX_MISSIONS'		, "8");	
+// MINIMUM FLEET TIME MUST HIGHER THEN BASH_TIME
+define('FLEETLOG_AGE'				, 86400);	
+
+// EXPERIMENAL FUNCTION: DATABASE UPDATE
+define('ENABLE_DATABASE_BACKUP'		, false);
+// IT'S REQUIRED TO CHANGE TO DIR.
+// ADDIONALLY, ITS REQUIRED, PHP CAN WRITE INTO THIS DIR.
+// ALSO, ITS HIGHLY RECOMMEND TO FORBIDDEN THE DIR FOR HTTP USERS (.htaccess Protection)	
+define('STORAGE_BACKUP_TO_DIR'		, '/tmp/');
 
 // Root IDs
 define('ROOT_UNI'					, 1);	
 define('ROOT_USER'					, 1);	
 
-// AdminAuthlevels
+// AUTHLEVEL
 define('AUTH_ADM'					, 3);
 define('AUTH_OPS'					, 2);
 define('AUTH_MOD'					, 1);
 define('AUTH_USR'					, 0);
 
-// Moduls
-define('MODUL_AMOUNT'				, 42);
+// Modules
+define('MODULE_AMOUNT'				, 42);
+define('MODULE_ALLIANCE'			, 0);
+define('MODULE_BANLIST'				, 21);
+define('MODULE_BANNER'				, 37);
+define('MODULE_BATTLEHALL'			, 12);
+define('MODULE_BUDDYLIST'			, 6);
+define('MODULE_BUILDING'			, 2);
+define('MODULE_CHAT'				, 7);
+define('MODULE_DMEXTRAS'			, 8);
+define('MODULE_FLEET_EVENTS'		, 10);
+define('MODULE_FLEET_TABLE'			, 9);
+define('MODULE_FLEET_TRADER'		, 38);
+define('MODULE_GALAXY'				, 11);
+define('MODULE_IMPERIUM'			, 15);
+define('MODULE_INFORMATION'			, 14);
+define('MODULE_MESSAGES'			, 16);
+define('MODULE_MISSILEATTACK'		, 40);
+define('MODULE_MISSION_ATTACK'		, 1);
+define('MODULE_MISSION_ACS'			, 42);
+define('MODULE_MISSION_COLONY'		, 35);
+define('MODULE_MISSION_DARKMATTER'	, 31);
+define('MODULE_MISSION_DESTROY'		, 29);
+define('MODULE_MISSION_EXPEDITION'	, 30);
+define('MODULE_MISSION_HOLD'		, 33);
+define('MODULE_MISSION_RECYCLE'		, 32);
+define('MODULE_MISSION_SPY'			, 24);
+define('MODULE_MISSION_STATION'		, 36);
+define('MODULE_MISSION_TRANSPORT'	, 34);
+define('MODULE_NOTICE'				, 17);
+define('MODULE_OFFICIER'			, 18);
+define('MODULE_PHALANX'				, 19);
+define('MODULE_PLAYERCARD'			, 20);
+define('MODULE_RECORDS'				, 22);
+define('MODULE_RESEARCH'			, 3);
+define('MODULE_RESSOURCE_LIST'		, 23);
+define('MODULE_SEARCH'				, 26);
+define('MODULE_SHIPYARD_FLEET'		, 4);
+define('MODULE_SHIPYARD_DEFENSIVE'	, 5);
+define('MODULE_SHORTCUTS'			, 41);
+define('MODULE_SIMULATOR'			, 39);
+define('MODULE_STATISTICS'			, 25);
+define('MODULE_SUPPORT'				, 27);
+define('MODULE_TECHTREE'			, 28);
+define('MODULE_TRADER'				, 13);
 
-define('MODUL_ALLIANCE'				, 0);
-define('MODUL_BANLIST'				, 21);
-define('MODUL_BANNER'				, 37);
-define('MODUL_BATTLEHALL'			, 12);
-define('MODUL_BUDDYLIST'			, 6);
-define('MODUL_BUILDING'				, 2);
-define('MODUL_CHAT'					, 7);
-define('MODUL_DMEXTRAS'				, 8);
-define('MODUL_FLEET_EVENTS'			, 10);
-define('MODUL_FLEET_TABLE'			, 9);
-define('MODUL_FLEET_TRADER'			, 38);
-define('MODUL_GALAXY'				, 11);
-define('MODUL_IMPERIUM'				, 15);
-define('MODUL_INFORMATION'			, 14);
-define('MODUL_MESSAGES'				, 16);
-define('MODUL_MISSILEATTACK'		, 40);
-define('MODUL_MISSION_ATTACK'		, 1);
-define('MODUL_MISSION_ACS'			, 42);
-define('MODUL_MISSION_COLONY'		, 35);
-define('MODUL_MISSION_DARKMATTER'	, 31);
-define('MODUL_MISSION_DESTROY'		, 29);
-define('MODUL_MISSION_EXPEDITION'	, 30);
-define('MODUL_MISSION_HOLD'			, 33);
-define('MODUL_MISSION_RECYCLE'		, 32);
-define('MODUL_MISSION_SPY'			, 24);
-define('MODUL_MISSION_STATION'		, 36);
-define('MODUL_MISSION_TRANSPORT'	, 34);
-define('MODUL_NOTICE'				, 17);
-define('MODUL_OFFICIER'				, 18);
-define('MODUL_PHALANX'				, 19);
-define('MODUL_PLAYERCARD'			, 20);
-define('MODUL_RECORDS'				, 22);
-define('MODUL_RESEARCH'				, 3);
-define('MODUL_RESSOURCE_LIST'		, 23);
-define('MODUL_SEARCH'				, 26);
-define('MODUL_SHIPYARD_FLEET'		, 4);
-define('MODUL_SHIPYARD_DEFENSIVE'	, 5);
-define('MODUL_SHOTCUTS'				, 41);
-define('MODUL_SIMULATOR'			, 39);
-define('MODUL_STATISTICS'			, 25);
-define('MODUL_SUPPORT'				, 27);
-define('MODUL_TECHTREE'				, 28);
-define('MODUL_TRADER'				, 13);
-
-//Fleet Status
-
+// FLEET STATE
 define('FLEET_OUTWARD'				, 0);
 define('FLEET_RETURN'				, 1);
 define('FLEET_HOLD'					, 2);
 
-?>
+// ELEMENT FLAGS
+define('ELEMENT_BUILD'				, 1); # ID 0 - 99
+define('ELEMENT_TECH'				, 2); # ID 101 - 199
+define('ELEMENT_FLEET'				, 4); # ID 201 - 399
+define('ELEMENT_DEFENSIVE'			, 8); # ID 401 - 599
+define('ELEMENT_OFFICIER'			, 16); # ID 601 - 699
+define('ELEMENT_BONUS'				, 32); # ID 701 - 799
+define('ELEMENT_RACE'				, 64); # ID 801 - 899
+define('ELEMENT_PLANET_RESOURCE'   , 128); # ID 901 - 949
+define('ELEMENT_USER_RESOURCE'     , 256); # ID 951 - 999
+
+// .. 512, 1024, 2048, 4096, 8192, 16384, 32768
+
+define('ELEMENT_PRODUCTION'			, 65536);
+define('ELEMENT_STORAGE'			, 131072);
+define('ELEMENT_ONEPERPLANET'		, 262144);
+define('ELEMENT_BOUNS'				, 524288);
+define('ELEMENT_BUILD_ON_PLANET'	, 1048576);
+define('ELEMENT_BUILD_ON_MOONS'		, 2097152);
+define('ELEMENT_RESOURCE_ON_TF'		, 4194304);
+define('ELEMENT_RESOURCE_ON_FLEET'	, 8388608);
+define('ELEMENT_RESOURCE_ON_STEAL'	, 16777216);

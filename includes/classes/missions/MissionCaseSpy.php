@@ -37,124 +37,110 @@ class MissionCaseSpy extends MissionFunctions
 	
 	function TargetEvent()
 	{
-		global $db, $pricelist, $LANG;		
-		$CurrentUser         = $db->uniquequery("SELECT `lang`, `spy_tech`, `rpg_espion` FROM ".USERS." WHERE `id` = '".$this->_fleet['fleet_owner']."';");
-		$LNG			     = $LANG->GetUserLang($CurrentUser['lang'], array('L18N', 'FLEET', 'TECH'));
-		$CurrentUserID       = $this->_fleet['fleet_owner'];
-		$TargetPlanet        = $db->uniquequery("SELECT * FROM ".PLANETS." WHERE `id` = ".$this->_fleet['fleet_end_id'].";");
-		$TargetUserID        = $TargetPlanet['id_owner'];
-		$CurrentPlanet       = $db->uniquequery("SELECT name,system,galaxy,planet FROM ".PLANETS." WHERE `galaxy` = '".$this->_fleet['fleet_start_galaxy']."' AND `system` = '".$this->_fleet['fleet_start_system']."' AND `planet` = '".$this->_fleet['fleet_start_planet']."';");
-		$CurrentSpyLvl       = max(($CurrentUser['spy_tech'] + ($CurrentUser['rpg_espion'] * $pricelist[610]['info'])), 1);
-		$TargetUser          = $db->uniquequery("SELECT * FROM ".USERS." WHERE `id` = '".$TargetUserID."';");
-		$TargetSpyLvl        = max(($TargetUser['spy_tech'] + ($TargetUser['rpg_espion'] * $pricelist[610]['info'])), 1);
-		$fleet               = explode(";", $this->_fleet['fleet_array']);
-			
+		global $pricelist, $reslist, $resource, $LANG;		
+		$ownUser		= $GLOBALS['DATABASE']->uniquequery("SELECT * FROM ".USERS." WHERE id = ".$this->_fleet['fleet_owner'].";");
+		$ownPlanet		= $GLOBALS['DATABASE']->uniquequery("SELECT name, galaxy, system, planet FROM ".PLANETS." WHERE id = ".$this->_fleet['fleet_start_id'].";");
+		$ownSpyLvl		= max($ownUser['spy_tech'], 1);
+		
+		$LNG			= $LANG->GetUserLang($ownUser['lang']);
+		
+		$targetUser		= $GLOBALS['DATABASE']->uniquequery("SELECT * FROM ".USERS." WHERE id = ".$this->_fleet['fleet_target_owner'].";");
+		$targetPlanet	= $GLOBALS['DATABASE']->uniquequery("SELECT * FROM ".PLANETS." WHERE id = ".$this->_fleet['fleet_end_id'].";");
+		
+		$targetSpyLvl	= max($targetUser['spy_tech'], 1);
+					
 		require_once(ROOT_PATH.'includes/classes/class.PlanetRessUpdate.php');	
-		$PlanetRess = new ResourceUpdate();
 		
-		$TargetUser['factor']				= getFactors($TargetUser, 'basic', $this->_fleet['fleet_start_time']);
+		$targetUser['factor']				= getFactors($targetUser, 'basic', $this->_fleet['fleet_start_time']);
 		$PlanetRess 						= new ResourceUpdate();
-		list($TargetUser, $TargetPlanet)	= $PlanetRess->CalcResource($TargetUser, $TargetPlanet, true, $this->_fleet['fleet_start_time']);
+		list($targetUser, $targetPlanet)	= $PlanetRess->CalcResource($targetUser, $targetPlanet, true, $this->_fleet['fleet_start_time']);
 		
-		foreach ($fleet as $a => $b)
+		$fleetAmount	= $this->_fleet['fleet_amount'];
+		
+		$Diffence		= abs($ownSpyLvl - $targetSpyLvl);
+		$MinAmount		= $ownSpyLvl > $targetSpyLvl ? -1 * pow($Diffence, 2) : pow($Diffence, 2);
+		$SpyFleet		= $fleetAmount >= $MinAmount;
+		$SpyDef			= $fleetAmount >= $MinAmount + 1;
+		$SpyBuild		= $fleetAmount >= $MinAmount + 3;
+		$SpyTechno		= $fleetAmount >= $MinAmount + 5;
+			
+
+		$classIDs[900]	= array_merge($reslist['resstype'][1], $reslist['resstype'][2]);
+				
+		if($SpyFleet) 
 		{
-			if (empty($b))
-				continue;
-
-			$a = explode(",", $b);
-			if ($a[0] != 210)
-				continue;
-
-			$LS		= $a[1];
-			break;
-		}
-
-
-		$Diffence	 = abs($CurrentSpyLvl - $TargetSpyLvl);
-		$MinAmount 	 = ($CurrentSpyLvl > $TargetSpyLvl) ? -1 * pow($Diffence, 2) : pow($Diffence, 2);
-		$SpyFleet	 = ($LS >= $MinAmount) ? true : false;
-		$SpyDef		 = ($LS >= $MinAmount + 1) ? true : false;
-		$SpyBuild	 = ($LS >= $MinAmount + 3) ? true : false;
-		$SpyTechno	 = ($LS >= $MinAmount + 5) ? true : false;
-		
-		$MaterialsInfo    	= $this->SpyTarget($TargetPlanet, 0, $LNG['sys_mess_head'], $LNG);
-		$GetSB	    		= $MaterialsInfo['String'];
-		$Array				= $MaterialsInfo['Array'];
-		$Count				= array();
-			
-		if($SpyFleet){
-			$PlanetFleetInfo  = $this->SpyTarget($TargetPlanet, 1, $LNG['sys_spy_fleet'], $LNG);
-			$GetSB     		 .= $PlanetFleetInfo['String'];
-			$Count['Fleet']	  = $PlanetFleetInfo['Count'];
-			$Array			  = $Array + $PlanetFleetInfo['Array'];
-		}
-		if($SpyDef){
-			$PlanetDefenInfo  = $this->SpyTarget($TargetPlanet, 2, $LNG['sys_spy_defenses'], $LNG);
-			$GetSB	    	 .= $PlanetDefenInfo['String'];
-			$Count['Def']	  = $PlanetDefenInfo['Count'];
-			$Array			  = $Array + $PlanetDefenInfo['Array'];
-		}
-		if($SpyBuild){
-			$PlanetBuildInfo  = $this->SpyTarget($TargetPlanet, 3, $LNG['tech'][0], $LNG);
-			$GetSB	    	 .= $PlanetBuildInfo['String'];
-		}
-		if($SpyTechno){
-			$TargetTechnInfo  = $this->SpyTarget($TargetUser, 4, $LNG['tech'][100], $LNG);
-			$GetSB		  	 .= $TargetTechnInfo['String'];
-			$Array			  = $Array + $TargetTechnInfo['Array'];
+			$classIDs[200]	= $reslist['fleet'];
 		}
 		
-		$string	= "";
-		
-		foreach($Array as $ID => $Amount)
+		if($SpyDef) 
 		{
-			$string .= "&amp;im[".$ID."]=".$Amount;
-		}
-			
-		if(array_sum($Count) == 0){
-			$TargetChances	= 0;
-			$SpyerChances	= 1; 
-		} else {
-			$TargetChances 	= mt_rand(0, min(($LS/4) * ($TargetSpyLvl / $CurrentSpyLvl), 100));
-			$SpyerChances  	= mt_rand(0, 100);
+			$classIDs[400]	= $reslist['defense'];
 		}
 		
-		$DestProba = $TargetChances >= $SpyerChances ? $LNG['sys_mess_spy_destroyed'] : sprintf( $LNG['sys_mess_spy_lostproba'], $TargetChances);
+		if($SpyBuild) 
+		{
+			$classIDs[0]	= $reslist['build'];
+		}
+		
+		if($SpyTechno) 
+		{
+			$classIDs[100]	= $reslist['tech'];
+		}
+		
+		$targetChance 	= mt_rand(0, min(($fleetAmount/4) * ($targetSpyLvl / $ownSpyLvl), 100));
+		$spyChance  	= mt_rand(0, 100);
+		
+		// I'm use template class here, because i want to exclude HTML in PHP.
+		
+		require_once(ROOT_PATH.'includes/classes/class.template.php');
+		
+		$template	= new template;
+		
+		$template->caching		= true;
+		$template->compile_id	= $ownUser['lang'];
+		#$template->loadFilter('output', 'trimwhitespace');
+		list($tplDir)	= $template->getTemplateDir();
+		$template->setTemplateDir($tplDir.'game/');
+		$template->assign_vars(array(
+			'targetUser'	=> $targetUser,
+			'targetPlanet'	=> $targetPlanet,
+			'targetChance'	=> $targetChance,
+			'spyChance'		=> $spyChance,
+			'classIDs'		=> $classIDs,
+			'resource'		=> $resource,
+			'isBattleSim'	=> ENABLE_SIMULATOR_LINK == true && isModulAvalible(MODULE_SIMULATOR),
+			'title'			=> sprintf($LNG['sys_mess_head'], $targetPlanet['name'], $targetPlanet['galaxy'], $targetPlanet['system'], $targetPlanet['planet'], _date($LNG['php_tdformat'], $this->_fleet['fleet_end_time'], $targetUser['timezone'], $LNG)),
+		));
+		
+		$template->assign_vars(array(
+			'LNG'			=> $LNG
+		), false);
+				
+		$spyRaport	= $template->fetch('shared.mission.spyraport.tpl');
 
-		$AttackLink  = "<center>";
-		$AttackLink .= "<a href=\"game.php?page=fleet&amp;galaxy=". $this->_fleet['fleet_end_galaxy'] ."&amp;system=". $this->_fleet['fleet_end_system'] ."";
-		$AttackLink .= "&amp;planet=".$this->_fleet['fleet_end_planet']."&amp;planettype=".$this->_fleet['fleet_end_type']."";
-		$AttackLink .= "&amp;target_mission=1";
-		$AttackLink .= " \">". $LNG['type_mission'][1];
-		$AttackLink .= "</a></center>";
-		$MessageEnd  = "<center>".$DestProba."<br>".((ENABLE_SIMULATOR_LINK == true && isModulAvalible(MODUL_SIMULATOR)) ? "<a href=\"game.php?page=battlesim".$string."\">".$LNG['fl_simulate']."</a>":"")."</center>";
-			
-		$SpyMessage = "<br>".$GetSB."<br>".$AttackLink.$MessageEnd;
-		SendSimpleMessage($CurrentUserID, 0, $this->_fleet['fleet_start_time'], 0, $LNG['sys_mess_qg'], $LNG['sys_mess_spy_report'], $SpyMessage);
+		SendSimpleMessage($this->_fleet['fleet_owner'], 0, $this->_fleet['fleet_start_time'], 0, $LNG['sys_mess_qg'], $LNG['sys_mess_spy_report'], $spyRaport);
 		
-		$LNG		    = $LANG->GetUserLang($TargetUser['lang']);
-		$TargetMessage  = $LNG['sys_mess_spy_ennemyfleet'] ." ". $CurrentPlanet['name'];
+		$LNG		    = $LANG->GetUserLang($targetUser['lang']);
+		$targetMessage  = $LNG['sys_mess_spy_ennemyfleet'] ." ". $ownPlanet['name'];
 
 		if($this->_fleet['fleet_start_type'] == 3)
-			$TargetMessage .= $LNG['sys_mess_spy_report_moon'].' ';
+			$targetMessage .= $LNG['sys_mess_spy_report_moon'].' ';
 
-		$TargetMessage .= "<a href=\"game.php?page=galaxy&mode=3&galaxy=". $CurrentPlanet["galaxy"] ."&system=". $CurrentPlanet["system"] ."\">";
-		$TargetMessage .= "[". $CurrentPlanet["galaxy"] .":". $CurrentPlanet["system"] .":". $CurrentPlanet["planet"] ."]</a> ";
-		$TargetMessage .= $LNG['sys_mess_spy_seen_at'] ." ". $TargetPlanet['name'];
-		$TargetMessage .= " [". $TargetPlanet["galaxy"] .":". $TargetPlanet["system"] .":". $TargetPlanet["planet"] ."] ". $LNG['sys_mess_spy_seen_at2'] .".";
+		$targetMessage .= '<a href="game.php?page=galaxy&amp;galaxy='.$ownPlanet["galaxy"].'&amp;system='.$ownPlanet["system"].'">'.
+						  '['.$ownPlanet['galaxy'].':'.$ownPlanet['system'].':'.$ownPlanet['planet'].']</a> '.
+						  $LNG['sys_mess_spy_seen_at'].' '.$targetPlanet['name'].
+						  ' ['. $targetPlanet['galaxy'].':'.$targetPlanet['system'].':'.$targetPlanet['planet'].'] '.$LNG['sys_mess_spy_seen_at2'].'.';
 
-		SendSimpleMessage($TargetUserID, 0, $this->_fleet['fleet_start_time'], 0, $LNG['sys_mess_spy_control'], $LNG['sys_mess_spy_activity'], $TargetMessage);
+		SendSimpleMessage($this->_fleet['fleet_target_owner'], 0, $this->_fleet['fleet_start_time'], 0, $LNG['sys_mess_spy_control'], $LNG['sys_mess_spy_activity'], $targetMessage);
 
-		if ($TargetChances >= $SpyerChances)
+		if ($targetChance >= $spyChance)
 		{
-			$Qry  = "UPDATE ".PLANETS." SET ";
-			$Qry .= "`der_crystal` = `der_crystal` + '".($LS * 300)."' ";
-			$Qry .= "WHERE `galaxy` = '". $TargetPlanet['galaxy'] ."' AND ";
-			$Qry .= "`system` = '". $TargetPlanet['system'] ."' AND ";
-			$Qry .= "`planet` = '". $TargetPlanet['planet'] ."' AND ";
-			$Qry .= "`planet_type` = '1';";
-			
-			$db->query($Qry);
+			$CONF		= getConfig($this->_fleet['fleet_universe']);
+			$WhereCol	= $this->_fleet['fleet_end_type'] == 3 ? "id_luna" : "id";		
+			$GLOBALS['DATABASE']->query("UPDATE ".PLANETS." SET
+			der_metal = der_metal + ".($fleetAmount * $pricelist[210]['cost'][901] * $CONF['Fleet_Cdr']).", 
+			der_crystal = der_crystal + ".($fleetAmount * $pricelist[210]['cost'][902] * $CONF['Fleet_Cdr'])." 
+			WHERE ".$WhereCol." = ".$this->_fleet['fleet_end_id'].";");
 			$this->KillFleet();
 		}
 		else
@@ -172,131 +158,6 @@ class MissionCaseSpy extends MissionFunctions
 	function ReturnEvent()
 	{	
 		$this->RestoreFleet();
-	}
-	
-	private function SpyTarget($TargetPlanet, $Mode, $TitleString, $LNG)
-	{
-		global $resource, $db;
-
-		$Count		= 0;
-		$LookAtLoop = true;
-		if ($Mode == 0)
-		{
-				$String  = '
-				<table style="width:100%;"><tr><th colspan="5">
-				<a href="game.php?page=galaxy&mode=3&galaxy='. $TargetPlanet['galaxy'] .'&system='. $TargetPlanet['system']. '">
-				'.sprintf($TitleString, $TargetPlanet['name'], $TargetPlanet['galaxy'], $TargetPlanet['system'], $TargetPlanet['planet'], tz_date($this->_fleet['fleet_end_time'], $LNG['php_tdformat'], $LNG)) .'</th>
-                </tr><tr>
-                <td style="width:25%;" class="left transparent">'. $LNG['tech'][901] .'</td><td style="width:25%;" class="left transparent">'. pretty_number($TargetPlanet['metal']) .'</td><td class="transparent">&nbsp;</td>
-                <td style="width:25%;" class="left transparent">'. $LNG['tech'][902]   .'</td><td style="width:25%;" class="left transparent">'. pretty_number($TargetPlanet['crystal'])    .'</td>
-                </tr><tr>
-                <td style="width:25%;" class="left transparent">'. $LNG['tech'][903] .'</td><td style="width:25%;" class="left transparent">'. pretty_number($TargetPlanet['deuterium'])  .'</td><td class="transparent">&nbsp;</td>
-                <td style="width:25%;" class="left transparent">'. $LNG['tech'][911]    .'</td><td style="width:25%;" class="left transparent">'. pretty_number($TargetPlanet['energy']) .'</td>
-                </tr><tr>';
-						
-                $Array[1]       = $TargetPlanet['metal'];
-                $Array[2]       = $TargetPlanet['crystal'];
-                $Array[3]       = $TargetPlanet['deuterium'];
-			
-			$LookAtLoop = false;
-		}
-		elseif ($Mode == 1)
-		{
-			$ResFrom[0] = 200;
-			$ResTo[0]   = 299;
-			$Loops      = 1;
-		}
-		elseif ($Mode == 2)
-		{
-			$ResFrom[0] = 400;
-			$ResTo[0]   = 499;
-			$ResFrom[1] = 500;
-			$ResTo[1]   = 599;
-			$Loops      = 2;
-		}
-		elseif ($Mode == 3)
-		{
-			$ResFrom[0] = 1;
-			$ResTo[0]   = 99;
-			$Loops      = 1;
-		}
-		elseif ($Mode == 4)
-		{
-			$ResFrom[0] = 100;
-			$ResTo[0]   = 199;
-			$Loops      = 1;
-		}
-	
-		if ($Mode == 1)
-		{
-			$def = $db->query('SELECT * FROM '.FLEETS.' WHERE `fleet_mission` = 5 AND `fleet_end_id` = '. $this->_fleet['fleet_end_id'].' AND fleet_start_time<'.TIMESTAMP.' AND fleet_end_stay>='.TIMESTAMP.';');
-			while ($defRow = $db->fetch_array($def))
-			{
-				$defRowDef = explode(';', $defRow['fleet_array']);
-				foreach ($defRowDef as $Element)
-				{
-					$Element = explode(',', $Element);
-
-					if ($Element[0] < 100) continue;
-
-					if (!isset($TargetPlanet[$resource[$Element[0]]]))
-						$TargetPlanet[$resource[$Element[0]]] = 0;
-
-					$TargetPlanet[$resource[$Element[0]]] += $Element[1];
-				}
-			}
-		}
-		
-		if ($LookAtLoop == true)
-		{
-			$String  	 = '<table style="width:100%;"><tr><th colspan="'. ((2 * SPY_REPORT_ROW) + (SPY_REPORT_ROW - 1)).'">'. $TitleString .'</th></tr>';
-			$CurrentLook = 0;
-			while ($CurrentLook < $Loops)
-			{
-				$row     = 0;
-				for ($Item = $ResFrom[$CurrentLook]; $Item <= $ResTo[$CurrentLook]; $Item++)
-				{
-					if ($TargetPlanet[$resource[$Item]] <= 0)
-						continue;
-
-					if ($row == 0)
-						$String  .= "<tr>";
-
-					$String  .= '<td style="width:25%;" class="left transparent">'.$LNG['tech'][$Item].'</td><td style="width:25%;" class="left transparent">'.pretty_number($TargetPlanet[$resource[$Item]]).'</td>';
-						
-					$Array[$Item]	=  $TargetPlanet[$resource[$Item]];
-					$Count			+=  $TargetPlanet[$resource[$Item]];
-					$row++;
-					if ($row == SPY_REPORT_ROW)
-					{
-						$String  .= '</tr>';
-						$row      = 0;
-					} else {
-						$String  .= '<td class="transparent">&nbsp;</td>';
-					}
-				}
-
-				while ($row != 0)
-				{
-					$String  	.= '<td class="transparent">&nbsp;</td><td class="transparent">&nbsp;</td>';
-					$row++;
-					if ($row == SPY_REPORT_ROW)
-					{
-						$String  .= '</tr>';
-						$row      = 0;
-					}
-				}
-				$CurrentLook++;
-			}
-		}
-		
-		$String .= '</table>';
-
-		$return['String'] = $String;
-		$return['Array']  = (is_array($Array) ? $Array : array());
-		$return['Count']  = $Count;
-
-		return $return;
 	}
 }
 

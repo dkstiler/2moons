@@ -79,4 +79,3 @@
 </table>
 
 {/if}
-{include file="overall_footer.tpl"}

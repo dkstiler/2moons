@@ -31,7 +31,7 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowChatConfigPage()
 {
-	global $CONF, $LNG, $USER, $LANG, $db;
+	global $CONF, $LNG, $USER, $LANG;
 	if (!empty($_POST))
 	{
 		$config_before = array(	
@@ -58,12 +58,12 @@ function ShowChatConfigPage()
 		$CONF['chat_nickchange']		= isset($_POST['chat_nickchange']) && $_POST['chat_nickchange'] == 'on' ? 1 : 0;
 		$CONF['chat_closed']			= isset($_POST['chat_closed']) && $_POST['chat_closed'] == 'on' ? 1 : 0;
 		
-		$CONF['chat_socket_host']		= request_var('chat_socket_host', '', true);
-		$CONF['chat_socket_ip']			= request_var('chat_socket_ip', '');
-		$CONF['chat_socket_port']		= request_var('chat_socket_port', '', 0);
-		$CONF['chat_socket_chatid']		= request_var('chat_socket_chatid', 0);
-		$CONF['chat_channelname']		= request_var('chat_channelname', '', true);
-		$CONF['chat_botname']			= request_var('chat_botname', '', true);
+		$CONF['chat_socket_host']		= HTTP::_GP('chat_socket_host', '', true);
+		$CONF['chat_socket_ip']			= HTTP::_GP('chat_socket_ip', '');
+		$CONF['chat_socket_port']		= HTTP::_GP('chat_socket_port', '', 0);
+		$CONF['chat_socket_chatid']		= HTTP::_GP('chat_socket_chatid', 0);
+		$CONF['chat_channelname']		= HTTP::_GP('chat_channelname', '', true);
+		$CONF['chat_botname']			= HTTP::_GP('chat_botname', '', true);
 		
 		$config_after = array(	
 			'chat_closed'			=> $CONF['chat_closed'],
@@ -91,7 +91,8 @@ function ShowChatConfigPage()
 				
 	}
 
-	$template	= new template();
+	$template	= new template();
+
 	$template->assign_vars(array(
 		'chat_socket_chatid'	=> $CONF['chat_socket_chatid'],
 		'chat_socket_port'		=> $CONF['chat_socket_port'],

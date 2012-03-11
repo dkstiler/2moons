@@ -1,8 +1,8 @@
 {include file="ins_header.tpl"}
 <tr>
 <td class="left">
-<h2>{lang}licence_head{/lang}</h2>
-<p>{lang}licence_desc{/lang}</p>
+<h2>{$LNG.licence_head}</h2>
+<p>{$LNG.licence_desc}</p>
 <div id="licence">
 <h3>GNU GENERAL PUBLIC LICENSE</h3>
 <p>Version 3, 29 June 2007</p>
@@ -643,19 +643,19 @@ copy of the Program in return for a fee.</p>
 			<input type="checkbox" name="accept">
 		</td>
 		<td class="transparent left">
-			<label>{lang}licence_accept{/lang}</label>
+			<label>{$LNG.licence_accept}</label>
 		</td>
 	</tr>
 	{if isset($accept)}
 	<tr>
 		<td class="transparent" colspan="2">
-			<span class="no">{lang}licence_need_accept{/lang}</span>
+			<span class="no">{$LNG.licence_need_accept}</span>
 		</td>
 	</tr>
 	{/if}
 	<tr>
 		<td class="transparent" colspan="2">
-			<input type="submit" value="{lang}continue{/lang}">
+			<input type="submit" value="{$LNG.continue}">
 		</td>
 	</tr>
 </table>

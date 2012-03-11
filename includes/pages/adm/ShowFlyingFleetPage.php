@@ -33,59 +33,62 @@ require_once(ROOT_PATH. 'includes/classes/class.FlyingFleetsTable.php');
 
 function ShowFlyingFleetPage()
 {
-	global $LNG, $db;
+	global $LNG;
 	
-	$id	= request_var('id', 0);
+	$id	= HTTP::_GP('id', 0);
 	if(!empty($id)){
-		$lock	= request_var('lock', 0);
-		$db->query("UPDATE ".FLEETS." SET `fleet_busy` = '".$lock."' WHERE `fleet_id` = '".$id."' AND `fleet_universe` = '".$_SESSION['adminuni']."';");
+		$lock	= HTTP::_GP('lock', 0);
+		$GLOBALS['DATABASE']->query("UPDATE ".FLEETS." SET `fleet_busy` = '".$lock."' WHERE `fleet_id` = '".$id."' AND `fleet_universe` = '".$_SESSION['adminuni']."';");
 		
 		$SQL	= ($lock == 0) ? "NULL" : "'ADM_LOCK'";
 		
-		$db->query("UPDATE ".FLEETS_EVENT." SET `lock` = ".$SQL." WHERE `fleetID` = ".$id.";");
+		$GLOBALS['DATABASE']->query("UPDATE ".FLEETS_EVENT." SET `lock` = ".$SQL." WHERE `fleetID` = ".$id.";");
 	} 
 	
 	$orderBy		= "fleet_id";
 
-	$fleetResult	= $db->query("SELECT 
+	$fleetResult	= $GLOBALS['DATABASE']->query("SELECT 
 	fleet.*,
 	event.`lock`,
+	COUNT(event.fleetID) as error,
 	pstart.name as startPlanetName,
 	ptarget.name as targetPlanetName,
 	ustart.username as startUserName,
 	utarget.username as targetUserName,
 	acs.name as acsName
 	FROM ".FLEETS." fleet
-	INNER JOIN ".FLEETS_EVENT." event ON fleetID = fleet_id
+	LEFT JOIN ".FLEETS_EVENT." event ON fleetID = fleet_id
 	LEFT JOIN ".PLANETS." pstart ON pstart.id = fleet_start_id
 	LEFT JOIN ".PLANETS." ptarget ON ptarget.id = fleet_end_id
 	LEFT JOIN ".USERS." ustart ON ustart.id = fleet_owner
 	LEFT JOIN ".USERS." utarget ON utarget.id = fleet_target_owner
 	LEFT JOIN ".AKS." acs ON acs.id = fleet_group
 	WHERE fleet_universe = ".$_SESSION['adminuni']."
+	GROUP BY event.fleetID
 	ORDER BY ".$orderBy.";");
 	
 	$FleetList	= array();
 	
-	while($fleetRow = $db->fetch_array($fleetResult)) {
-		$fleetList		= array();
-		$fleetArray		= array_filter(explode(';', $fleetRow['fleet_array']));
-		foreach($fleetArray as $ship) {
+	while($fleetRow = $GLOBALS['DATABASE']->fetch_array($fleetResult)) {
+		$shipList		= array();
+		$shipArray		= array_filter(explode(';', $fleetRow['fleet_array']));
+		foreach($shipArray as $ship) {
 			$shipDetail		= explode(',', $ship);
-			$fleetList[$shipDetail[0]]	= $shipDetail[1];
+			$shipList[$shipDetail[0]]	= $shipDetail[1];
 		}
 		
 		$FleetList[]	= array(
 			'fleetID'				=> $fleetRow['fleet_id'],
 			'lock'					=> !empty($fleetRow['lock']),
 			'count'					=> $fleetRow['fleet_amount'],
+			'error'					=> !$fleetRow['error'],
 			'ships'					=> $fleetList,
 			'state'					=> $fleetRow['fleet_mess'],
-			'starttime'				=> tz_date($fleetRow['start_time']),
-			'arrivaltime'			=> tz_date($fleetRow['fleet_start_time']),
-			'stayhour'				=> ($fleetRow['fleet_end_stay'] - $fleetRow['fleet_start_time']) / 3600,
-			'staytime'				=> $fleetRow['fleet_start_time'] !== $fleetRow['fleet_end_stay'] ? tz_date($fleetRow['fleet_end_stay']) : 0,
-			'endtime'				=> tz_date($fleetRow['fleet_end_time']),
+			'starttime'				=> _date($LNG['php_tdformat'], $fleetRow['start_time'], $USER['timezone']),
+			'arrivaltime'			=> _date($LNG['php_tdformat'], $fleetRow['fleet_start_time'], $USER['timezone']),
+			'stayhour'				=> round(($fleetRow['fleet_end_stay'] - $fleetRow['fleet_start_time']) / 3600),
+			'staytime'				=> $fleetRow['fleet_start_time'] !== $fleetRow['fleet_end_stay'] ? _date($LNG['php_tdformat'], $fleetRow['fleet_end_stay'], $USER['timezone']) : 0,
+			'endtime'				=> _date($LNG['php_tdformat'], $fleetRow['fleet_end_time'], $USER['timezone']),
 			'missionID'				=> $fleetRow['fleet_mission'],
 			'acsID'					=> $fleetRow['fleet_group'],
 			'acsName'				=> $fleetRow['acsName'],
@@ -114,11 +117,10 @@ function ShowFlyingFleetPage()
 		);
 	}
 	
-	$db->free_result($fleetResult);
+	
+	$GLOBALS['DATABASE']->free_result($fleetResult);
 	
 	$template			= new template();
-	
-
 	$template->assign_vars(array(
 		'FleetList'			=> $FleetList,
 	));

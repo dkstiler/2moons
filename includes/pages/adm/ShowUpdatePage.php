@@ -31,7 +31,7 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowUpdatePage()
 {
-	global $LNG, $CONF, $db;
+	global $LNG, $CONF;
 	$template	= new template();
 	$template->message('<p>This Site is currently under construction, because the update system brings somtimes inconsistent game installations.</p><p>Alternate update process: <a href="http://2moons.cc/b4-support/b7-installation-update-und-konvertierung/t1721-howto-update-your-2moons-game-with-private-modifications-without-edit-files-one-by-one/" target="blank"><u>2moons.cc Board</u></a></p><p>We apologize for any inconvenience.</p>');
 	exit;
@@ -51,7 +51,7 @@ function ShowUpdatePage()
 			update_config(array('VERSION' => $Temp[0].'.'.$Temp[1].'.'.$Temp[2]));
 	}
 	
-	$ACTION	= request_var('action', '');
+	$ACTION	= HTTP::_GP('action', '');
 	switch($ACTION)
 	{
 		case "download":
@@ -164,7 +164,7 @@ function GetLogs($fromRev) {
 				foreach($value['children'] as $entry) {
 					if ($entry['name'] == 'D:VERSION-NAME') $array['version'] = $entry['tagData'];
 					if ($entry['name'] == 'D:CREATOR-DISPLAYNAME') $array['author'] = $entry['tagData'];
-					if ($entry['name'] == 'S:DATE') $array['date'] = tz_date(strtotime($entry['tagData']));
+					if ($entry['name'] == 'S:DATE') $array['date'] = _date($LNG['php_tdformat'], strtotime($entry['tagData']), $USER['timezone']);
 					if ($entry['name'] == 'D:COMMENT') $array['comment'] = makebr($entry['tagData']);
 
 					if (($entry['name'] == 'S:ADDED-PATH') || ($entry['name'] == 'S:MODIFIED-PATH') || ($entry['name'] == 'S:DELETED-PATH')) {

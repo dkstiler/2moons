@@ -29,6 +29,11 @@
 
 class Language
 {
+	/* TODO:
+	* Create an language reposity
+	* Move language into database
+	* clean language keys
+	*/
 	public $Default	= '';
 	public $User	= '';
 	public static $Languages;
@@ -135,10 +140,13 @@ class Language
 	function includeLang($Files)
 	{
 		global $LNG;
-		while (list(,$File) = each($Files)){
-			require(ROOT_PATH . "language/de/".$File.'.php');
+
+		// Fixed BOM problems.
+		ob_start();
+        foreach($Files as $File) {
 			require(ROOT_PATH . "language/".$this->User."/".$File.'.php');
 		}
+		ob_end_clean();
 	}
 	
 	function getExtra($File)
@@ -159,17 +167,20 @@ class Language
 	
 	function GetUserLang($ID, $Files = array())
 	{
-		global $db, $CONF;	
-		$LANGUAGE = is_numeric($ID) && !in_array($ID, self::getAllowedLangs()) ? $db->countquery("SELECT `lang` FROM ".USERS." WHERE `id` = '".$ID."';") : $ID;
+		
+		$LANGUAGE = is_numeric($ID) && !in_array($ID, self::getAllowedLangs()) ? $GLOBALS['DATABASE']->countquery("SELECT `lang` FROM ".USERS." WHERE `id` = '".$ID."';") : $ID;
 	
 		if(!in_array($LANGUAGE, self::getAllowedLangs()))
 			$LANGUAGE	= $this->Default;
 	
 		if(empty($Files))
-			$Files	= array('L18N', 'FLEET');
+			$Files	= array('L18N', 'FLEET', 'TECH', 'CUSTOM');
 	
-		while (list(,$File) = each($Files)){
+		foreach($Files as $File) {
+			// Fixed BOM problems.
+			ob_start();
 			require(ROOT_PATH . "language/".$LANGUAGE."/".$File.'.php');
+			ob_end_clean();
 		}
 			
 		return $LNG;

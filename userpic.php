@@ -27,57 +27,38 @@
  * @link http://code.google.com/p/2moons/
  */
 
-define('INSIDE'  , true);
-define('LOGIN'   , false);
-define('IN_CRON' , true);
+define('MODE', 'CRON');
 
-define('ROOT_PATH' ,'./');
+define('ROOT_PATH', str_replace('\\', '/',dirname(__FILE__)).'/');
 
 if(!extension_loaded('gd')) {
-	header('Cache-Control: no-cache');
-	header('Content-type: image/gif');
-	header('Content-length: 43');
-	header('Expires: 0');
-	echo("\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x21\xF9\x04\x01\x00\x00\x00\x00\x2C\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3B");
-	exit;
+	clearGIF();
 }
 
 require(ROOT_PATH . 'includes/common.php');
-error_reporting(E_ALL);
-$id = request_var('id', 0);
+$id = HTTP::_GP('id', 0);
 
-if(!isModulAvalible(MODUL_BANNER) || $id == 0) {
-	header('Cache-Control: no-cache');
-	header('Content-type: image/gif');
-	header('Content-length: 43');
-	header('Expires: 0');
-	echo("\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x21\xF9\x04\x01\x00\x00\x00\x00\x2C\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3B");
-	exit;
+if(!isModulAvalible(MODULE_BANNER) || $id == 0) {
+	clearGIF();
 }
 
 $LANG->GetLangFromBrowser();
-$LANG->includeLang(array('L18N', 'BANNER'));
+$LANG->includeLang(array('L18N', 'BANNER', 'CUSTOM'));
 
 require_once(ROOT_PATH."includes/classes/class.StatBanner.php");
 
 $banner = new StatBanner();
 $Data	= $banner->GetData($id);
 if(!isset($Data) || !is_array($Data)) {
-	header('Cache-Control: no-cache');
-	header('Content-type: image/gif');
-	header('Content-length: 43');
-	header('Expires: 0');
-	echo("\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x21\xF9\x04\x01\x00\x00\x00\x00\x2C\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3B");
-	exit;
+	clearGIF();
 }
 	
 $ETag	= md5(implode('', $Data));
 header('ETag: '.$ETag);
+
 if(isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $ETag) {
-	header('HTTP/1.0 304 Not Modified');
+	HTTP::sendHeader('HTTP/1.0 304 Not Modified');
 	exit;
 }
 
 $banner->CreateUTF8Banner($Data);
-
-?>

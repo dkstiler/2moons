@@ -1,5 +1,5 @@
 {extends file="index.tpl"}
-{block name="title" prepend}{$menu_news}{/block}
+{block name="title" prepend}{$LNG.menu_news}{/block}
 {block name="content"}
 {foreach name=News item=NewsRow from=$NewsList}
 {if !$smarty.foreach.News.first}<hr>{/if}

@@ -42,7 +42,7 @@ class MissionCaseFoundDM extends MissionFunctions
 	
 	function TargetEvent()
 	{
-		$this->setState(FLEET_STAY);
+		$this->setState(FLEET_HOLD);
 		$this->SaveFleet();
 	}
 	

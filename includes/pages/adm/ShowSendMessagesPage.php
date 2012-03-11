@@ -32,10 +32,10 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 
 function ShowSendMessagesPage() {
-	global $USER, $LNG, $db, $CONF, $LANG;
+	global $USER, $LNG, $CONF, $LANG;
 
 	
-	$ACTION	= request_var('action', '');
+	$ACTION	= HTTP::_GP('action', '');
 	if ($ACTION == 'send')
 	{
 		switch($USER['authlevel'])
@@ -51,10 +51,10 @@ function ShowSendMessagesPage() {
 			break;
 		}
 
-		$Subject	= request_var('subject', '', true);
-		$Message 	= makebr(request_var('text', '', true));
-		$Mode	 	= request_var('mode', 0);
-		$Lang	 	= request_var('lang', '');
+		$Subject	= HTTP::_GP('subject', '', true);
+		$Message 	= makebr(HTTP::_GP('text', '', true));
+		$Mode	 	= HTTP::_GP('mode', 0);
+		$Lang	 	= HTTP::_GP('lang', '');
 
 		if (!empty($Message) && !empty($Subject))
 		{
@@ -64,8 +64,8 @@ function ShowSendMessagesPage() {
 				$From    	= '<span class="'.$class.'">'.$LNG['user_level'][$USER['authlevel']].' '.$USER['username'].'</span>';
 				$Subject 	= '<span class="'.$class.'">'.$Subject.'</span>';
 				$Message 	= '<span class="'.$class.'">'.bbcode($Message).'</span>';
-				$USERS		= $db->query("SELECT `id` FROM ".USERS." WHERE `universe` = '".$_SESSION['adminuni']."'".(!empty($Lang) ? " AND `lang` = '".$db->sql_escape($Lang)."'": "").";");
-				while($UserData = $db->fetch_array($USERS)) {
+				$USERS		= $GLOBALS['DATABASE']->query("SELECT `id` FROM ".USERS." WHERE `universe` = '".$_SESSION['adminuni']."'".(!empty($Lang) ? " AND `lang` = '".$GLOBALS['DATABASE']->sql_escape($Lang)."'": "").";");
+				while($UserData = $GLOBALS['DATABASE']->fetch_array($USERS)) {
 					SendSimpleMessage($UserData['id'], $USER['id'], TIMESTAMP, 50, $From, $Subject, $Message);
 				}
 			}
@@ -93,8 +93,8 @@ function ShowSendMessagesPage() {
 				$mail->Body   		= bbcode($Message);
 				$mail->SetFrom($CONF['smtp_sendmail'], $CONF['game_name']);
 				$mail->AddAddress($CONF['smtp_sendmail'], $CONF['game_name']);
-				$USERS	= $db->query("SELECT `username`, `email` FROM ".USERS." WHERE `universe` = '".$_SESSION['adminuni']."'".(!empty($Lang) ? " AND `lang` = '".$db->sql_escape($Lang)."'": "").";");
-				while($UserData = $db->fetch_array($USERS)) {
+				$USERS	= $GLOBALS['DATABASE']->query("SELECT `username`, `email` FROM ".USERS." WHERE `universe` = '".$_SESSION['adminuni']."'".(!empty($Lang) ? " AND `lang` = '".$GLOBALS['DATABASE']->sql_escape($Lang)."'": "").";");
+				while($UserData = $GLOBALS['DATABASE']->fetch_array($USERS)) {
 					$mail->AddBCC($UserData['email'], $UserData['username']);
 				}
 				$mail->Send();

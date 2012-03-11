@@ -31,16 +31,16 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowMessageListPage()
 {
-	global $db, $LNG;
+	global $LNG;
 	
 	$Prev       = !empty($_POST['prev']) ? true : false;
 	$Next       = !empty($_POST['next']) ? true : false;
 	$DelSel     = !empty($_POST['delsel']) ? true : false;
 	$DelDat     = !empty($_POST['deldat']) ? true : false;
-	$CurrPage   = request_var('curr', 1);
-	$Selected   = request_var('sele', 0);
-	$SelType    = request_var('type', 1);
-	$SelPage    = request_var('side', 1);
+	$CurrPage   = HTTP::_GP('curr', 1);
+	$Selected   = HTTP::_GP('sele', 0);
+	$SelType    = HTTP::_GP('type', 1);
+	$SelPage    = HTTP::_GP('side', 1);
 
 	$ViewPage = 1;
 	if ( $Selected != $SelType )
@@ -54,9 +54,9 @@ function ShowMessageListPage()
 	}
 
 	if ($Selected < 100)
-		$Mess      = $db->countquery("SELECT COUNT(*) FROM ".MESSAGES." WHERE `message_type` = '".$Selected."' AND `message_universe` = '".$_SESSION['adminuni']."';;");
+		$Mess      = $GLOBALS['DATABASE']->countquery("SELECT COUNT(*) FROM ".MESSAGES." WHERE `message_type` = '".$Selected."' AND `message_universe` = '".$_SESSION['adminuni']."';;");
 	elseif ($Selected == 100)
-		$Mess      = $db->countquery("SELECT COUNT(*) FROM ".MESSAGES." WHERE `message_universe` = '".$_SESSION['adminuni']."';;");
+		$Mess      = $GLOBALS['DATABASE']->countquery("SELECT COUNT(*) FROM ".MESSAGES." WHERE `message_universe` = '".$_SESSION['adminuni']."';;");
 	
 	
 	$MaxPage   = ceil($Mess / 25);
@@ -79,7 +79,7 @@ function ShowMessageListPage()
 			foreach($_POST['sele'] as $MessId => $Value)
 			{
 				if ($Value = "on")
-					$db->query("DELETE FROM ".MESSAGES." WHERE `message_id` = '". $MessId ."';");
+					$GLOBALS['DATABASE']->query("DELETE FROM ".MESSAGES." WHERE `message_id` = '". $MessId ."';");
 			}
 		}
 	}
@@ -92,7 +92,7 @@ function ShowMessageListPage()
 		$LimitDate = mktime (0,0,0, $SelMonth, $SelDay, $SelYear );
 		if ($LimitDate !== false)
 		{
-			$db->multi_query("DELETE FROM ".MESSAGES." WHERE `message_time` <= '".$LimitDate."';DELETE FROM ".RW." WHERE `time` <= '".$LimitDate ."';");
+			$GLOBALS['DATABASE']->multi_query("DELETE FROM ".MESSAGES." WHERE `message_time` <= '".$LimitDate."';DELETE FROM ".RW." WHERE `time` <= '".$LimitDate ."';");
 		}
 	}
 
@@ -106,13 +106,13 @@ function ShowMessageListPage()
 	
 	$StartRec            = (($ViewPage - 1) * 25);
 	if ($Selected == 50)
-		$Messages            = $db->query("SELECT * FROM ".MESSAGES." WHERE `message_type` = '". $Selected ."' AND `message_universe` = '".$_SESSION['adminuni']."' ORDER BY `message_time` DESC LIMIT ". $StartRec .",25;");
+		$Messages            = $GLOBALS['DATABASE']->query("SELECT * FROM ".MESSAGES." WHERE `message_type` = '". $Selected ."' AND `message_universe` = '".$_SESSION['adminuni']."' ORDER BY `message_time` DESC LIMIT ". $StartRec .",25;");
 	elseif ($Selected == 100)
-		$Messages            = $db->query("SELECT u.username, m.* FROM ".MESSAGES." as m, ".USERS." as u WHERE m.`message_owner` = u.`id` AND m.`message_universe` = '".$_SESSION['adminuni']."' ORDER BY `message_time` DESC LIMIT ". $StartRec .",25;");
+		$Messages            = $GLOBALS['DATABASE']->query("SELECT u.username, m.* FROM ".MESSAGES." as m, ".USERS." as u WHERE m.`message_owner` = u.`id` AND m.`message_universe` = '".$_SESSION['adminuni']."' ORDER BY `message_time` DESC LIMIT ". $StartRec .",25;");
 	else
-		$Messages            = $db->query("SELECT u.username, m.* FROM ".MESSAGES." as m, ".USERS." as u WHERE m.`message_type` = '". $Selected ."' AND m.`message_owner` = u.`id` AND `message_universe` = '".$_SESSION['adminuni']."' ORDER BY `message_time` DESC LIMIT ". $StartRec .",25;");
+		$Messages            = $GLOBALS['DATABASE']->query("SELECT u.username, m.* FROM ".MESSAGES." as m, ".USERS." as u WHERE m.`message_type` = '". $Selected ."' AND m.`message_owner` = u.`id` AND `message_universe` = '".$_SESSION['adminuni']."' ORDER BY `message_time` DESC LIMIT ". $StartRec .",25;");
 	
-	while($row = $db->fetch_array($Messages))
+	while($row = $GLOBALS['DATABASE']->fetch_array($Messages))
 	{
 		$MessagesList[]	= array(
 			'id'		=> $row['message_id'],
@@ -120,7 +120,7 @@ function ShowMessageListPage()
 			'to'		=> ($Selected != 50) ? $row['username'].' '.$LNG['input_id'].':'.$row['message_owner'] : 'Universe',
 			'subject'	=> $row['message_subject'],
 			'text'		=> $row['message_text'],
-			'time'		=> str_replace(' ', '&nbsp;', tz_date($row['message_time'])),
+			'time'		=> str_replace(' ', '&nbsp;', _date($LNG['php_tdformat'], $row['message_time']), $USER['timezone']),
 		);
 	}	
 

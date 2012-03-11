@@ -31,7 +31,7 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowStatsPage() 
 {
-	global $LNG, $CONF, $db, $USER;
+	global $LNG, $CONF, $USER;
 	if ($_POST)
 	{
 		$config_before = array(
@@ -41,10 +41,10 @@ function ShowStatsPage()
 			'stat_level' => $CONF['stat_level']
 		);
 		
-		$CONF['stat_settings']				= request_var('stat_settings', 0);
-		$CONF['stat'] 						= request_var('stat', 0);
-		$CONF['stat_update_time']			= request_var('stat_update_time', 0);
-		$CONF['stat_level']					= request_var('stat_level', 0);
+		$CONF['stat_settings']				= HTTP::_GP('stat_settings', 0);
+		$CONF['stat'] 						= HTTP::_GP('stat', 0);
+		$CONF['stat_update_time']			= HTTP::_GP('stat_update_time', 0);
+		$CONF['stat_level']					= HTTP::_GP('stat_level', 0);
 		
 		$config_after = array(
 			'stat_settings' =>  $CONF['stat_settings'], 
@@ -63,7 +63,8 @@ function ShowStatsPage()
 		
 	}
 	
-	$template	= new template();
+	$template	= new template();
+
 
 	$template->assign_vars(array(	
 		'stat_level'						=> $CONF['stat_level'],

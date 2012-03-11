@@ -27,8 +27,6 @@
  * @link http://code.google.com/p/2moons/
  */
 
-if (!defined('INSIDE')) die(header("location:../../"));
-
 class FlyingFleetHandler
 {	
 	protected $token;
@@ -56,18 +54,17 @@ class FlyingFleetHandler
 	
 	function run()
 	{
-		global $db;
-		
+				
 		require_once(ROOT_PATH.'includes/classes/class.MissionFunctions.php');
 		
-		$fleetResult = $db->query("SELECT ".FLEETS.".* 
+		$fleetResult = $GLOBALS['DATABASE']->query("SELECT ".FLEETS.".* 
 		FROM ".FLEETS_EVENT." 
 		INNER JOIN ".FLEETS." ON fleetID = fleet_id
 		WHERE `lock` = '".$this->token."';");
-		while ($fleetRow = $db->fetch_array($fleetResult))
+		while ($fleetRow = $GLOBALS['DATABASE']->fetch_array($fleetResult))
 		{
 			if(!isset(self::$MissionsPattern[$fleetRow['fleet_mission']])) {
-				$db->query("DELETE FROM ".FLEETS." WHERE `fleet_id` = '".$fleetRow['fleet_id']."';");
+				$GLOBALS['DATABASE']->query("DELETE FROM ".FLEETS." WHERE `fleet_id` = '".$fleetRow['fleet_id']."';");
 				continue;
 			}
 			
@@ -91,19 +88,18 @@ class FlyingFleetHandler
 				break;
 			}
 
-			#$db->query("UPDATE ".FLEETS." SET `fleet_busy` = '0' WHERE `fleet_id` = '".$fleetRow['fleet_id']."';");
+			#$GLOBALS['DATABASE']->query("UPDATE ".FLEETS." SET `fleet_busy` = '0' WHERE `fleet_id` = '".$fleetRow['fleet_id']."';");
 		}
-		$db->free_result($fleetResult);
+		$GLOBALS['DATABASE']->free_result($fleetResult);
 	}
 	
 	function IfFleetBusy($FleetID)
 	{
-		global $db;
-		$FleetInfo	= $db->uniquequery("SELECT fleet_busy FROM ".FLEETS." WHERE `fleet_id` = '".$FleetID."';");
+				$FleetInfo	= $GLOBALS['DATABASE']->uniquequery("SELECT fleet_busy FROM ".FLEETS." WHERE `fleet_id` = '".$FleetID."';");
 		if($FleetInfo['fleet_busy'] == 1) {
 			return false;
 		} else {
-			$db->query("UPDATE ".FLEETS." SET `fleet_busy` = '1' WHERE `fleet_id` = '".$FleetID."';");
+			$GLOBALS['DATABASE']->query("UPDATE ".FLEETS." SET `fleet_busy` = '1' WHERE `fleet_id` = '".$FleetID."';");
 			return true;
 		}
 	}

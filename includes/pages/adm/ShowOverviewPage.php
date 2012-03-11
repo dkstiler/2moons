@@ -48,7 +48,8 @@ function ShowOverviewPage()
 			$Message[]	= sprintf($LNG['ow_dir_not_writable'], 'includes');
 	}
 	
-	$template	= new template();
+	$template	= new template();
+
 
 	$template->assign_vars(array(	
 		'ow_none'			=> $LNG['ow_none'],

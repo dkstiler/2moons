@@ -31,10 +31,10 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowQuickEditorPage()
 {
-	global $USER, $LNG, $db, $reslist, $resource;
-	$action	= request_var('action', '');
-	$edit	= request_var('edit', '');
-	$id 	= request_var('id', 0);
+	global $USER, $LNG, $reslist, $resource;
+	$action	= HTTP::_GP('action', '');
+	$edit	= HTTP::_GP('edit', '');
+	$id 	= HTTP::_GP('id', 0);
 
 	switch($edit)
 	{
@@ -44,7 +44,7 @@ function ShowQuickEditorPage()
 			{
 				$SpecifyItemsPQ	.= "`".$resource[$ID]."`,";
 			}
-			$PlanetData	= $db->uniquequery("SELECT ".$SpecifyItemsPQ." `name`, `id_owner`, `planet_type`, `galaxy`, `system`, `planet`, `destruyed`, `diameter`, `field_current`, `field_max`, `temp_min`, `temp_max`, `metal`, `crystal`, `deuterium` FROM ".PLANETS." WHERE `id` = '".$id."';");
+			$PlanetData	= $GLOBALS['DATABASE']->uniquequery("SELECT ".$SpecifyItemsPQ." `name`, `id_owner`, `planet_type`, `galaxy`, `system`, `planet`, `destruyed`, `diameter`, `field_current`, `field_max`, `temp_min`, `temp_max`, `metal`, `crystal`, `deuterium` FROM ".PLANETS." WHERE `id` = '".$id."';");
 						
 			if($action == 'send'){
 				$SQL	= "UPDATE ".PLANETS." SET ";
@@ -60,20 +60,22 @@ function ShowQuickEditorPage()
 				$SQL	.= "`crystal` = '".request_outofint('crystal')."', ";
 				$SQL	.= "`deuterium` = '".request_outofint('deuterium')."', ";
 				$SQL	.= "`field_current` = '".$Fields."', ";
-				$SQL	.= "`field_max` = '".request_var('field_max', 0)."', ";
-				$SQL	.= "`name` = '".$db->sql_escape(request_var('name', '', UTF8_SUPPORT))."', ";
+				$SQL	.= "`field_max` = '".HTTP::_GP('field_max', 0)."', ";
+				$SQL	.= "`name` = '".$GLOBALS['DATABASE']->sql_escape(HTTP::_GP('name', '', UTF8_SUPPORT))."', ";
 				$SQL	.= "`eco_hash` = '' ";
 				$SQL	.= "WHERE `id` = '".$id."' AND `universe` = '".$_SESSION['adminuni']."';";
 					
-				$db->query($SQL);
+				$GLOBALS['DATABASE']->query($SQL);
 				
 				$old = array();
 				$new = array();
-                foreach($DataIDs as $IDs)
+                foreach(array_merge($DataIDs,$reslist['resstype'][1]) as $IDs)
                 {
                     $old[$IDs]    = $PlanetData[$resource[$IDs]];
 					$new[$IDs]    = request_outofint($resource[$IDs]);
                 }
+				$old['field_max'] = $PlanetData['field_max'];
+				$new['field_max'] = HTTP::_GP('field_max', 0);
 				$LOG = new Log(2);
 				$LOG->target = $id;
 				$LOG->old = $old;
@@ -82,7 +84,7 @@ function ShowQuickEditorPage()
 		
 				exit(sprintf($LNG['qe_edit_planet_sucess'], $PlanetData['name'], $PlanetData['galaxy'], $PlanetData['system'], $PlanetData['planet']));
 			}
-			$UserInfo				= $db->uniquequery("SELECT `username` FROM ".USERS." WHERE `id` = '".$PlanetData['id_owner']."' AND `universe` = '".$_SESSION['adminuni']."';");
+			$UserInfo				= $GLOBALS['DATABASE']->uniquequery("SELECT `username` FROM ".USERS." WHERE `id` = '".$PlanetData['id_owner']."' AND `universe` = '".$_SESSION['adminuni']."';");
 
 			$build = $defense = $fleet	= array();
 			
@@ -166,31 +168,38 @@ function ShowQuickEditorPage()
 			{
 				$SpecifyItemsPQ	.= "`".$resource[$ID]."`,";
 			}
-			$UserData	= $db->uniquequery("SELECT ".$SpecifyItemsPQ." `username`, `authlevel`, `galaxy`, `system`, `planet`, `id_planet`, `darkmatter`, `authattack`, `authlevel` FROM ".USERS." WHERE `id` = '".$id."';");
+			$UserData	= $GLOBALS['DATABASE']->uniquequery("SELECT ".$SpecifyItemsPQ." `username`, `authlevel`, `galaxy`, `system`, `planet`, `id_planet`, `darkmatter`, `authattack`, `authlevel` FROM ".USERS." WHERE `id` = '".$id."';");
 			$ChangePW	= $USER['id'] == ROOT_USER || ($id != ROOT_USER && $USER['authlevel'] > $UserData['authlevel']);
 		
 			if($action == 'send'){
 				$SQL	= "UPDATE ".USERS." SET ";
 				foreach($DataIDs as $ID)
 				{
-					$SQL	.= "`".$resource[$ID]."` = '".abs(request_var($resource[$ID], 0))."', ";
+					$SQL	.= "`".$resource[$ID]."` = '".abs(HTTP::_GP($resource[$ID], 0))."', ";
 				}
-				$SQL	.= "`darkmatter` = '".max(request_var('darkmatter', 0), 0)."', ";
+				$SQL	.= "`darkmatter` = '".max(HTTP::_GP('darkmatter', 0), 0)."', ";
 				if(!empty($_POST['password']) && $ChangePW)
-					$SQL	.= "`password` = '".md5(request_var('password', '', true))."', ";
-				$SQL	.= "`username` = '".$db->sql_escape(request_var('name', '', UTF8_SUPPORT))."', ";
-				$SQL	.= "`authattack` = '".($UserData['authlevel'] != AUTH_USR && request_var('authattack', '') == 'on' ? $UserData['authlevel'] : 0)."' ";
+					$SQL	.= "`password` = '".cryptPassword(HTTP::_GP('password', '', true))."', ";
+				$SQL	.= "`username` = '".$GLOBALS['DATABASE']->sql_escape(HTTP::_GP('name', '', UTF8_SUPPORT))."', ";
+				$SQL	.= "`authattack` = '".($UserData['authlevel'] != AUTH_USR && HTTP::_GP('authattack', '') == 'on' ? $UserData['authlevel'] : 0)."' ";
 				$SQL	.= "WHERE `id` = '".$id."' AND `universe` = '".$_SESSION['adminuni']."';";
-				$db->query($SQL);
+				$GLOBALS['DATABASE']->query($SQL);
 				
 				$old = array();
 				$new = array();
 				foreach($DataIDs as $IDs)
                 {
                     $old[$IDs]    = $UserData[$resource[$IDs]];
-                    $new[$IDs]    = abs(request_var($resource[$IDs], 0));
+                    $new[$IDs]    = abs(HTTP::_GP($resource[$IDs], 0));
                 }
-                $LOG = new Log(1);
+				$old[921]			= $UserData[$resource[921]];
+				$new[921]			= abs(HTTP::_GP($resource[921], 0));
+				$old['username']	= $UserData['username'];
+				$new['username']	= $GLOBALS['DATABASE']->sql_escape(HTTP::_GP('name', '', UTF8_SUPPORT));
+				$old['authattack']	= $UserData['authattack'];
+				$new['authattack']	= ($UserData['authlevel'] != AUTH_USR && HTTP::_GP('authattack', '') == 'on' ? $UserData['authlevel'] : 0);
+				
+				$LOG = new Log(1);
 				$LOG->target = $id;
 				$LOG->old = $old;
 				$LOG->new = $new;
@@ -198,7 +207,7 @@ function ShowQuickEditorPage()
 				
 				exit(sprintf($LNG['qe_edit_player_sucess'], $UserData['username'], $id));
 			}
-			$PlanetInfo				= $db->uniquequery("SELECT `name` FROM ".PLANETS." WHERE `id` = '".$UserData['id_planet']."' AND `universe` = '".$_SESSION['adminuni']."';");
+			$PlanetInfo				= $GLOBALS['DATABASE']->uniquequery("SELECT `name` FROM ".PLANETS." WHERE `id` = '".$UserData['id_planet']."' AND `universe` = '".$_SESSION['adminuni']."';");
 
 			$tech		= array();
 			$officier	= array();

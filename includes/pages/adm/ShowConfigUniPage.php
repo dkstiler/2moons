@@ -31,7 +31,7 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowConfigUniPage()
 {
-	global $CONF, $LNG, $USER, $LANG, $db;
+	global $CONF, $LNG, $USER, $LANG;
 	if (!empty($_POST))
 	{
 		$config_before = array(
@@ -118,52 +118,52 @@ function ShowConfigUniPage()
 		$CONF['ref_active']				= isset($_POST['ref_active']) && $_POST['ref_active'] == 'on' ? 1 : 0;
 		
 		$CONF['OverviewNewsText']		= $_POST['NewsText'];
-		$CONF['close_reason']			= request_var('close_reason', '', true);
-		$CONF['uni_name']				= request_var('uni_name', '', true);
-		$CONF['forum_url'] 				= request_var('forum_url', '', true);
-		$CONF['game_speed'] 			= (2500 * request_var('game_speed', 0.0));
-		$CONF['fleet_speed'] 			= (2500 * request_var('fleet_speed', 0.0));
-		$CONF['resource_multiplier']	= request_var('resource_multiplier', 0.0);
-		$CONF['halt_speed']				= request_var('halt_speed', 0.0);
-		$CONF['initial_fields']			= request_var('initial_fields', 0);
-		$CONF['metal_basic_income']		= request_var('metal_basic_income', 0);
-		$CONF['crystal_basic_income']	= request_var('crystal_basic_income', 0);
-		$CONF['deuterium_basic_income']	= request_var('deuterium_basic_income', 0);
-		$CONF['lang']					= request_var('lang', '');
-		$CONF['Defs_Cdr']				= request_var('Defs_Cdr', 0);
-		$CONF['Fleet_Cdr']				= request_var('Fleet_Cdr', 0);
-		$CONF['noobprotectiontime']		= request_var('noobprotectiontime', 0);
-		$CONF['noobprotectionmulti']	= request_var('noobprotectionmulti', 0);
-		$CONF['min_build_time']			= request_var('min_build_time', 0);
-		$CONF['trade_allowed_ships']	= request_var('trade_allowed_ships', '');
-		$CONF['trade_charge']			= request_var('trade_charge', 0.0);
-		$CONF['max_galaxy']				= request_var('max_galaxy', 0);
-		$CONF['max_system']				= request_var('max_system', 0);
-		$CONF['max_planets']			= request_var('max_planets', 0);
-		$CONF['min_player_planets']		= request_var('min_player_planets', 0);
-		$CONF['max_player_planets']		= request_var('max_player_planets', 0);
-		$CONF['planet_factor']			= request_var('planet_factor', 0.0);
-		$CONF['max_elements_build']		= request_var('max_elements_build', 0);
-		$CONF['max_elements_tech']		= request_var('max_elements_tech', 0);
-		$CONF['max_elements_ships']		= request_var('max_elements_ships', 0);
-		$CONF['max_overflow']			= request_var('max_overflow', 0);
-		$CONF['moon_factor']			= request_var('moon_factor', 0.0);
-		$CONF['moon_chance']			= request_var('moon_chance', 0);
-		$CONF['darkmatter_cost_trader']	= request_var('darkmatter_cost_trader', 0);
-		$CONF['factor_university']		= request_var('factor_university', 0);
-		$CONF['max_fleets_per_acs']		= request_var('max_fleets_per_acs', 0);
-		$CONF['vmode_min_time']			= request_var('vmode_min_time', 0);
-		$CONF['gate_wait_time']			= request_var('gate_wait_time', 0);
-		$CONF['metal_start']			= request_var('metal_start', 0);
-		$CONF['crystal_start']			= request_var('crystal_start', 0);
-		$CONF['deuterium_start']		= request_var('deuterium_start', 0);
-		$CONF['darkmatter_start']		= request_var('darkmatter_start', 0);
-		$CONF['deuterium_cost_galaxy']	= request_var('deuterium_cost_galaxy', 0);
+		$CONF['close_reason']			= HTTP::_GP('close_reason', '', true);
+		$CONF['uni_name']				= HTTP::_GP('uni_name', '', true);
+		$CONF['forum_url'] 				= HTTP::_GP('forum_url', '', true);
+		$CONF['game_speed'] 			= (2500 * HTTP::_GP('game_speed', 0.0));
+		$CONF['fleet_speed'] 			= (2500 * HTTP::_GP('fleet_speed', 0.0));
+		$CONF['resource_multiplier']	= HTTP::_GP('resource_multiplier', 0.0);
+		$CONF['halt_speed']				= HTTP::_GP('halt_speed', 0.0);
+		$CONF['initial_fields']			= HTTP::_GP('initial_fields', 0);
+		$CONF['metal_basic_income']		= HTTP::_GP('metal_basic_income', 0);
+		$CONF['crystal_basic_income']	= HTTP::_GP('crystal_basic_income', 0);
+		$CONF['deuterium_basic_income']	= HTTP::_GP('deuterium_basic_income', 0);
+		$CONF['lang']					= HTTP::_GP('lang', '');
+		$CONF['Defs_Cdr']				= HTTP::_GP('Defs_Cdr', 0);
+		$CONF['Fleet_Cdr']				= HTTP::_GP('Fleet_Cdr', 0);
+		$CONF['noobprotectiontime']		= HTTP::_GP('noobprotectiontime', 0);
+		$CONF['noobprotectionmulti']	= HTTP::_GP('noobprotectionmulti', 0);
+		$CONF['min_build_time']			= HTTP::_GP('min_build_time', 0);
+		$CONF['trade_allowed_ships']	= HTTP::_GP('trade_allowed_ships', '');
+		$CONF['trade_charge']			= HTTP::_GP('trade_charge', 0.0);
+		$CONF['max_galaxy']				= HTTP::_GP('max_galaxy', 0);
+		$CONF['max_system']				= HTTP::_GP('max_system', 0);
+		$CONF['max_planets']			= HTTP::_GP('max_planets', 0);
+		$CONF['min_player_planets']		= HTTP::_GP('min_player_planets', 0);
+		$CONF['max_player_planets']		= HTTP::_GP('max_player_planets', 0);
+		$CONF['planet_factor']			= HTTP::_GP('planet_factor', 0.0);
+		$CONF['max_elements_build']		= HTTP::_GP('max_elements_build', 0);
+		$CONF['max_elements_tech']		= HTTP::_GP('max_elements_tech', 0);
+		$CONF['max_elements_ships']		= HTTP::_GP('max_elements_ships', 0);
+		$CONF['max_overflow']			= HTTP::_GP('max_overflow', 0);
+		$CONF['moon_factor']			= HTTP::_GP('moon_factor', 0.0);
+		$CONF['moon_chance']			= HTTP::_GP('moon_chance', 0);
+		$CONF['darkmatter_cost_trader']	= HTTP::_GP('darkmatter_cost_trader', 0);
+		$CONF['factor_university']		= HTTP::_GP('factor_university', 0);
+		$CONF['max_fleets_per_acs']		= HTTP::_GP('max_fleets_per_acs', 0);
+		$CONF['vmode_min_time']			= HTTP::_GP('vmode_min_time', 0);
+		$CONF['gate_wait_time']			= HTTP::_GP('gate_wait_time', 0);
+		$CONF['metal_start']			= HTTP::_GP('metal_start', 0);
+		$CONF['crystal_start']			= HTTP::_GP('crystal_start', 0);
+		$CONF['deuterium_start']		= HTTP::_GP('deuterium_start', 0);
+		$CONF['darkmatter_start']		= HTTP::_GP('darkmatter_start', 0);
+		$CONF['deuterium_cost_galaxy']	= HTTP::_GP('deuterium_cost_galaxy', 0);
 		$CONF['max_fleet_per_build']	= request_outofint('max_fleet_per_build');
-		$CONF['ref_bonus']				= request_var('ref_bonus', 0);
-		$CONF['ref_minpoints']			= request_var('ref_minpoints', 0);
-		$CONF['silo_factor']			= request_var('silo_factor', 0);
-		$CONF['ref_max_referals']		= request_var('ref_max_referals', 0);
+		$CONF['ref_bonus']				= HTTP::_GP('ref_bonus', 0);
+		$CONF['ref_minpoints']			= HTTP::_GP('ref_minpoints', 0);
+		$CONF['silo_factor']			= HTTP::_GP('silo_factor', 0);
+		$CONF['ref_max_referals']		= HTTP::_GP('ref_max_referals', 0);
 		
 		
 		if($CONF['game_speed'] == 0)
@@ -257,7 +257,7 @@ function ShowConfigUniPage()
 		$LOG->save();
 
 		if($CONF['adm_attack'] == 0)
-			$db->query("UPDATE ".USERS." SET `authattack` = '0' WHERE `universe` = '".$_SESSION['adminuni']."';");
+			$GLOBALS['DATABASE']->query("UPDATE ".USERS." SET `authattack` = '0' WHERE `universe` = '".$_SESSION['adminuni']."';");
 	}
 	
 	$template	= new template();

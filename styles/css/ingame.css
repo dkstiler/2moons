@@ -14,20 +14,22 @@ body.popup {
 	min-width:0px;
 }
 
-body,input,button,select,textarea,a,td,th,tr,table,button {
+body,input,button,select,textarea,td,th,tr,table,button {
 	font-family:Verdana;
 	font-size:10px;
 }
 
-a:focus {
+:focus {
 	outline:none
 }
 
-button:hover {
+input[type="submit"],input[type="button"],button {
 	cursor:pointer;
 }
 
-table,td,th {
+table {
+	border-collapse: separate;
+	border-spacing: 2px;
 	empty-cells:show
 }
 
@@ -38,9 +40,10 @@ table table,img {
 table {
 	margin:0 auto
 }
+
 td {
-	padding-left:3px;
-	padding-right:3px;
+	padding: 2px 3px;
+	vertical-align: middle;
 }
 
 input,button {
@@ -58,6 +61,10 @@ th {
 
 textarea {
 	width:97%
+}
+
+textarea.tinymce{
+	width:100%
 }
 
 .res_max,.res_current,.res_current_max {
@@ -95,19 +102,22 @@ textarea {
 
 .onlist {
     max-width: 100%;
+	margin:0;
+	padding:0;
 }
 
 .onlist:hover {
 	text-decoration:underline;
 }
 
-.shoutcut-edit {
+.shortcut-edit {
 	display:none;
 }
 
 .clear {
 	clear:both;
 }
+
 /** HEADER **/
 #header {
 	padding:5px 10px;
@@ -117,60 +127,53 @@ textarea {
 	min-width:915px;
 }
 
-#planetselect {
-	float:left;
-	width:215px;
+#headerTable {
+	width:100%;
 }
 
-#planetselect select{
+#planetSelectorWrapper {
+	width:145px;
+}
+
+#planetSelector {
 	float:left;
 	height:16px;
 	margin:37px 10px;
 	width:145px;
 }
 
-#planetselect img{
-	float:left;
+#planetImage{
 	width:50px;
-	height:50px;
-	margin:20px 0;
 }
 
-#resourcesdiv{
+#planetImage > img{
+	width:50px;
+	height:50px;
+}
+
+#resourceWrapper{
 	height:90px;
 	text-align:center;
 	margin:0;
 }
 
-#resourcestable{
-	height:85px;
-	width:700px;
-	margin:0 auto;
-    padding:5px 0 0;
-	list-style:none;
+#resourceTable{
+	height:80px;
+	padding-right: 215px;
 }
 
-.ie8 #resourcesdiv {
-	margin:0 215px 0 215px;
-}
-
-.resourceinfo{
+#resourceTable td{
 	margin:0 5px;
-	padding:0;
-	float:left;
-	width:130px;
+	min-width:130px;
 }
 
-#resourcesdiv p{
-	margin:0;
-}
-
-#resourcesdiv img {
+#resourceTable img {
     display: block;
     height: 22px;
     margin: 0 auto;
     width: 42px;
 }
+
 /** MENU **/
 
 #leftmenu {
@@ -195,55 +198,20 @@ textarea {
 	padding:4px 20px;
 }
 
+#disclamer {
+	position: relative;
+	top: -24px;
+	width: 100%;
+	text-align: center;
+	font-size: 9px;
+}
+
 .menu-head {
 	height:78px;
 }
 
 .menucat1-head, .menucat2-head, .menucat3-head, .menu-footer{
 	height:30px;
-}
-
-/* PLANETMENU */
-
-#planet_menu {
-	width:100%;
-	position:fixed;
-	bottom:0px;
-	z-index:3;
-}
-
-#planet_menu_link {
-	padding-top:1px;
-}
-
-#planet_menu_header{
-	height:14px;
-	padding-top:2px;
-	padding-bottom:4px;
-	padding-right:10px;
-}
-
-#planet_menu_content{
-	height:90px;
-	overflow:auto;
-}
-
-#planet_menu_content img {
-	height:35px;
-	width:35px;
-}
-
-#planet_menu_content ul{
-	float:left;
-	margin:0;
-	padding:0;
-	list-style:none;
-}
-#planet_menu_content li {
-	height:80px;
-	width:80px;
-	float:left;
-	padding:5px;
 }
 
 #options select {
@@ -256,12 +224,12 @@ textarea {
 	padding:0;
 }
 
-#content {
+#content, .infobox {
 	margin:10px 10px 0 ;
 	padding:10px 10px 5px 10px;
 }
 
-#content > table, form > table {
+.full #content > table, .full form > table {
 	max-width:95%;
 	width:80%;
 }
@@ -303,15 +271,34 @@ div#trader + div {
 	width:100px;
 }
 
+.globalWarning {
+	background-color: #FFFFDD;
+	border: 1px solid #F7DF92;
+	color: #000000;
+	margin: 0;
+	padding: 5px;
+	text-align: center;	
+}
+
+.globalWarning a:hover {
+	text-decoration:underline;
+}
+
+.globalWarning a{
+	cursor:pointer;
+	color:#D20000;
+}
+
+.trader_col label:hover{
+	cursor:pointer;
+}
+
 .tip {
 	display:none;
 	padding:7px;
 	position:absolute;
 	z-index:1000;
 	max-width: 500px;
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
 }
 
 .ui-widget, .ui-widget td{
@@ -320,68 +307,79 @@ div#trader + div {
 }
 
 .ui-progressbar {
-	height: 10px;
+	height: 10px !important;
 }
 
 .ui-progressbar-value {
 	margin:0.
 }
-.b_button{font-weight:700}
-.u_button{text-decoration:underline}
-.s_button{text-decoration:line-through}
-.i_button{font-style:italic}
-.btn{background:transparent url(../images/buttons.gif) no-repeat scroll 0 0;width:20px;height:20px;margin-right:5px;display:inline-block}
-.bold{background-position:0 0}
-.bold:hover{background-position:0 -25px}
-.italic{background-position:-25px 0}
-.italic:hover{background-position:-25px -25px}
-.underline{background-position:-50px 0}
-.underline:hover{background-position:-50px -25px}
-.link{background-position:-75px 0}
-.link:hover{background-position:-75px -25px}
-.quote{background-position:-100px 0}
-.quote:hover{background-position:-100px -25px}
-.code{background-position:-125px 0}
-.code:hover{background-position:-125px -25px}
-.image{background-position:-150px 0}
-.image:hover{background-position:-150px -25px}
-.nlist{background-position:-175px 0}
-.nlist:hover{background-position:-175px -25px}
-.blist{background-position:-200px 0}
-.blist:hover{background-position:-200px -25px}
-.litem{background-position:-225px 0}
-.litem:hover{background-position:-225px -25px}
-.back{background-position:-250px 0}
-.back:hover{background-position:-250px -25px}
-.back_disable{background-position:-250px -50px}
-.forward{background-position:-275px 0}
-.forward:hover{background-position:-275px -25px}
-.forward_disable{background-position:-275px -50px}
-.usize{background-position:-300px 0}
-.usize:hover{background-position:-300px -25px}
-.dsize{background-position:-325px 0}
-.dsize:hover{background-position:-325px -25px}
 
-
-@media screen and (max-width: 1380px) {
-	#resourcesdiv {
-		margin:0 215px 0 215px;
-	}
+.infobox {
+    border: 2px solid red;
+    padding: 2px 5px;
+    text-align: center;
 }
+
+.spyRaportFooter,
+.spyRaportContainer {
+	clear:both;
+}
+
+.spyRaportContainerRow.first {
+	clear:both;
+}
+
+.spyRaportContainerHead {
+	font-weight:700;
+	padding-top:8px;
+}
+.spyRaportContainerCell {
+	float:left;
+	width:25%;
+}
+
+.spyRaportFooter{
+	text-align:center;
+	padding-top:8px;
+}
+
+table.tablesorter thead {
+	position:relative;
+}
+
+table.tablesorter thead tr .header {
+	cursor: pointer;
+}
+
+table.tablesorter thead tr .headerSortUp {
+	color:lime;
+}
+
+table.tablesorter thead tr .headerSortDown {
+	color:red;
+} 
+
+.defaultSkin table.mceLayout {
+	border-spacing: 0;
+	width:100% !important;
+}
+	
+.ui-autocomplete-category {
+	font-weight: bold;
+	padding: .2em .4em;
+	line-height: 1.5;
+}
+
+.ui-autocomplete-item {
+	cursor:pointer;
+}
+
 @media screen and (max-width: 1165px) {
 	body {
 		min-width: 0;
 	}
 	
-	#resourcestable {
-		width: 550px;
-	}
-		
-	#header {
-		min-width:765px;
-	}
-	
-	.resourceinfo {
-		width: 100px;
+	#resourceTable td{
+		min-width: 100px;
 	}
 }

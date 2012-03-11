@@ -34,7 +34,7 @@ require_once(ROOT_PATH . 'includes/functions/DeleteSelectedUser.php');
 
 function ShowSearchPage()
 {
-	global $LNG, $db;
+	global $LNG;
 	
 	if ($_GET['delete'] == 'user') {
         DeleteSelectedUser((int) $_GET['user']);
@@ -44,14 +44,14 @@ function ShowSearchPage()
         message($LNG['se_delete_succes_p'], '?page=search&search=planet&minimize=on', 2);
     }
 	
-	$SearchFile		= request_var('search', '');
-	$SearchFor		= request_var('search_in', '');
-	$SearchMethod	= request_var('fuki', '');
-	$SearchKey		= request_var('key_user', '', UTF8_SUPPORT);
-	$Page 			= request_var('side', 0);
-	$Order			= request_var('key_order', '');
-	$OrderBY		= request_var('key_acc', '');
-	$limit			= request_var('limit', 25);
+	$SearchFile		= HTTP::_GP('search', '');
+	$SearchFor		= HTTP::_GP('search_in', '');
+	$SearchMethod	= HTTP::_GP('fuki', '');
+	$SearchKey		= HTTP::_GP('key_user', '', UTF8_SUPPORT);
+	$Page 			= HTTP::_GP('side', 0);
+	$Order			= HTTP::_GP('key_order', '');
+	$OrderBY		= HTTP::_GP('key_acc', '');
+	$limit			= HTTP::_GP('limit', 25);
 
 	$Selector	= array(
 		'list'	=> array(
@@ -98,7 +98,7 @@ function ShowSearchPage()
 	
 	
 	
-	if (request_var('minimize', '') == 'on')
+	if (HTTP::_GP('minimize', '') == 'on')
 	{
 		$Minimize			= "&amp;minimize=on";
 		$template->assign_vars(array(	
@@ -110,16 +110,16 @@ function ShowSearchPage()
 	switch($SearchMethod)
 	{
 		case 'exacto':
-			$SpecifyWhere	=	"= '".$db->sql_escape($SearchKey)."'";
+			$SpecifyWhere	=	"= '".$GLOBALS['DATABASE']->sql_escape($SearchKey)."'";
 		break;
 		case 'last':
-			$SpecifyWhere	=	"LIKE '".$db->sql_escape($SearchKey, true)."%'";
+			$SpecifyWhere	=	"LIKE '".$GLOBALS['DATABASE']->sql_escape($SearchKey, true)."%'";
 		break;
 		case 'first':
-			$SpecifyWhere	=	"LIKE '%".$db->sql_escape($SearchKey, true)."'";
+			$SpecifyWhere	=	"LIKE '%".$GLOBALS['DATABASE']->sql_escape($SearchKey, true)."'";
 		break;
 		default:
-			$SpecifyWhere	=	"LIKE '%".$db->sql_escape($SearchKey, true)."%'";
+			$SpecifyWhere	=	"LIKE '%".$GLOBALS['DATABASE']->sql_escape($SearchKey, true)."%'";
 		break;
 	};
 
@@ -265,7 +265,7 @@ function ShowSearchPage()
 
 function MyCrazyLittleSearch($SpecifyItems, $WhereItem, $SpecifyWhere, $SpecialSpecify, $Order, $OrderBY, $Limit, $Table, $Page, $NameLang, $ArrayOSec, $Minimize, $SName, $SearchFile)
 {
-	global $USER, $LNG, $db;
+	global $USER, $LNG;
 	
 	$parse	=	$LNG;
 	
@@ -290,12 +290,12 @@ function MyCrazyLittleSearch($SpecifyItems, $WhereItem, $SpecifyWhere, $SpecialS
 	$QuerySearch	.=	$SpecifyWhere." ".$SpecialSpecify." ";
 	$QuerySearch	.=	"ORDER BY ".$Order." ".$OrderBY." ";
 	$QuerySearch	.=	"LIMIT ".$INI.",".$Limit;
-	$FinalQuery		=	$db->query($QuerySearch);
+	$FinalQuery		=	$GLOBALS['DATABASE']->query($QuerySearch);
 	
 	$QueryCSearch	 =	"SELECT COUNT(".$ArrayEx[0].") AS `total` FROM ".DB_PREFIX.$Table." ";
 	$QueryCSearch	.=	$WhereItem." ";
 	$QueryCSearch	.=	$SpecifyWhere." ".$SpecialSpecify." ";
-	$CountQuery		=	$db->uniquequery($QueryCSearch);
+	$CountQuery		=	$GLOBALS['DATABASE']->uniquequery($QueryCSearch);
 	
 	if ($CountQuery['total'] > 0)
 	{
@@ -359,12 +359,12 @@ function MyCrazyLittleSearch($SpecifyItems, $WhereItem, $SpecifyWhere, $SpecialS
 		$Search['LIST']	.=	"</tr>";
 	
 	
-		while ($WhileResult	=	$db->fetch_num($FinalQuery))
+		while ($WhileResult	=	$GLOBALS['DATABASE']->fetch_num($FinalQuery))
 		{
 			$Search['LIST']	 .=	"<tr>";
 			if ($Table == "users"){				
-				$WhileResult[3] = $_GET['search'] == "online" ? pretty_time( TIMESTAMP - $WhileResult[3] ) : tz_date($WhileResult[3] );
-				$WhileResult[4]	=	tz_date($WhileResult[4]);
+				$WhileResult[3] = $_GET['search'] == "online" ? pretty_time( TIMESTAMP - $WhileResult[3] ) : _date($LNG['php_tdformat'], $WhileResult[3] , $USER['timezone']);
+				$WhileResult[4]	=	_date($LNG['php_tdformat'], $WhileResult[4], $USER['timezone']);
 				
 				$WhileResult[6]	=	$LNG['rank'][$WhileResult[6]];
 				(($WhileResult[7] == '1')	? $WhileResult[7] = "<font color=lime>".$LNG['one_is_yes'][1]."</font>" : $WhileResult[7] = $LNG['one_is_yes'][0]);
@@ -372,12 +372,12 @@ function MyCrazyLittleSearch($SpecifyItems, $WhereItem, $SpecifyWhere, $SpecialS
 			}
 			
 			if ($Table == "banned"){
-				$WhileResult[2]	=	tz_date($WhileResult[2]);
-				$WhileResult[3]	=	tz_date($WhileResult[3]);
+				$WhileResult[2]	=	_date($LNG['php_tdformat'], $WhileResult[2], $USER['timezone']);
+				$WhileResult[3]	=	_date($LNG['php_tdformat'], $WhileResult[3], $USER['timezone']);
 			}
 			
 			if ($Table == "alliance")
-				$WhileResult[4]	=	tz_date($WhileResult[4]);
+				$WhileResult[4]	=	_date($LNG['php_tdformat'], $WhileResult[4], $USER['timezone']);
 				
 			if ($Table == "planets") {
 				$WhileResult[3]	=	pretty_time(TIMESTAMP - $WhileResult[3]);
@@ -394,7 +394,7 @@ function MyCrazyLittleSearch($SpecifyItems, $WhereItem, $SpecifyWhere, $SpecialS
 			
 				if ($USER['authlevel'] == AUTH_ADM)
 				{
-					$DELETEBUTTON = $WhileResult[0] != $USER['id'] || $WhileResult[0] != ROOT_USER ? "<a href=\"?page=search&amp;delete=user&amp;user=".$WhileResult[0]."\" border=\"0\" onclick=\"return confirm('".$LNG['ul_sure_you_want_dlte']." ".$WhileResult[1]."?');\"><img src=\"./styles/images/r1.png\" title=".$WhileResult[1]."></a>" : "-";
+					$DELETEBUTTON = $WhileResult[0] != $USER['id'] || $WhileResult[0] != ROOT_USER ? '<a href="?page=search&amp;delete=user&amp;user='.$WhileResult[0].'" border="0" onclick="return confirm(\''.$LNG['ul_sure_you_want_dlte'].' '.$WhileResult[1].'?\');"><img src="./styles/images/alliance/CLOSE.png" width="16" height="16" title='.$WhileResult[1].'></a>' : '-';
 					
 					$Search['LIST']	.=	"<td>".$DELETEBUTTON."</td>";
 				}
@@ -406,7 +406,7 @@ function MyCrazyLittleSearch($SpecifyItems, $WhereItem, $SpecifyWhere, $SpecialS
 					$Search['LIST']	.=	"<td><a href=\"javascript:openEdit('".$WhileResult[0]."', 'planet');\" border=\"0\"><img src=\"./styles/images/Adm/GO.png\" title=".$LNG['se_search_edit']."></a></td>";
 					
 				if ($USER['authlevel'] == AUTH_ADM)
-					$Search['LIST']	.=	"<td><a href=\"?page=search&amp;delete=planet&planet=".$WhileResult[0]."\" border=\"0\" onclick=\"return confirm('".$LNG['se_confirm_planet']." ".$WhileResult[1]."');\"><img src=\"./styles/images/r1.png\" title=".$LNG['button_delete']."></a></td>";
+					$Search['LIST']	.=	'<td><a href="?page=search&amp;delete=planet&amp;planet='.$WhileResult[0].'" border="0" onclick="return confirm(\''.$LNG['se_confirm_planet'].' '.$WhileResult[1].'\');"><img src="./styles/images/alliance/CLOSE.png" width="16" height="16" title='.$LNG['button_delete'].'></a></td>';
 			}
 			
 			$Search['LIST']	.=	"</tr>";
@@ -416,7 +416,7 @@ function MyCrazyLittleSearch($SpecifyItems, $WhereItem, $SpecifyWhere, $SpecialS
 		$Search['LIST']	.=	"</table>";
 	
 	
-		$db->free_result($FinalQuery);
+		$GLOBALS['DATABASE']->free_result($FinalQuery);
 		
 		return $Search;
 	}

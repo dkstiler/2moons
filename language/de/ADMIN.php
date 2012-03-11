@@ -55,8 +55,8 @@ $LNG['rank'][3]	= 'Administrator';
 
 
 // 	TIEMPO - TIME
-$LNG['time_days']	= 'Tage';
-$LNG['time_hours']	= 'Stunden';
+$LNG['time_days']		= 'Tage';
+$LNG['time_hours']		= 'Stunden';
 $LNG['time_minutes']	= 'Minuten';
 $LNG['time_seconds']	= 'Sekunden';
 //###########################################################//
@@ -230,6 +230,7 @@ $LNG['bo_select_title']			= 'Zeige die Namen beginnend mit';
 $LNG['bo_suspended_panel']		= 'Suspension Panel';
 $LNG['bo_bbb_go_back']			= '[ Zurück ]';
 $LNG['bo_bbb_go_act']			= '[ Neuladen ]';
+$LNG['bo_permanent']			= 'Permanente Sperre';
 $LNG['bo_bbb_title_1']			= 'Suspension system';
 $LNG['bo_bbb_title_2']			= 'Wann soll die Sperre aufgehoben werden';
 $LNG['bo_bbb_title_3']			= 'Suspension System &bull; <font color=red>Dieser Spieler ist bereits gesperrt';
@@ -331,6 +332,7 @@ $LNG['ow_dir_not_writable']			= './%s ist nicht beschreibar!';
 $LNG['ow_none']						= 'Keine Warnungen';
 $LNG['ow_news']						= 'News';
 $LNG['ow_updates']					= 'Letzte Updates';
+$LNG['ow_developers']				= 'Entwickler';
 
 //###########################################################//
 
@@ -551,6 +553,7 @@ $LNG['ff_targetuser']			= "Ziel User";
 $LNG['ff_targetplanet']			= "Ziel Planet";
 $LNG['ff_endtime']				= "Rückkehrzeit";
 $LNG['ff_holdtime']				= "Stationszeit";
+$LNG['ff_del']					= "Event deleted";
 $LNG['ff_lock']					= "Lock";
 $LNG['ff_unlock']				= "Unlock";
 
@@ -723,9 +726,9 @@ $LNG['ac_ranking']							= 'Statistik';
 $LNG['ac_see_ranking']						= 'Zeige Statistik';
 $LNG['ac_ally_ranking']						= 'Statistik der Allianz';
 $LNG['ac_user_ranking']						= 'Statistik des Spielers';
-$LNG['ac_register_time']					= 'Registiert';
+$LNG['ac_register_time']					= 'Registiert seit';
 $LNG['ac_register_ally_time']				= 'Gr&uml;ndungsdatum';
-$LNG['ac_act_time']							= 'Zeitpunkt der letzten Aktivit&auml;t';
+$LNG['ac_act_time']							= 'Letzten Aktivit&auml;t';
 $LNG['ac_info_ally']						= 'Allianzinformation ';
 $LNG['ac_leader']							= 'F&uuml;hrer';
 $LNG['ac_tag']								= 'Tag';
@@ -786,12 +789,12 @@ $LNG['se_type_last']		=	'Suche am Ende';
 $LNG['se_type_first']		=	'Suche am Anfang';
 $LNG['se_search']			=	'Suche';
 $LNG['se_name']				=	'Name';
-$LNG['se_id_owner']			=	'Besitzer-ID';
+$LNG['se_id_owner']			=	'User ID';
 $LNG['se_galaxy']			=	'Galaxie';
 $LNG['se_system']			=	'System';
 $LNG['se_planet']			=	'Planet';
 $LNG['se_tag']				=	'Tag';
-$LNG['se_email']			=	'E-mail';
+$LNG['se_email']			=	'E-Mail';
 $LNG['se_auth']				=	'Rang';
 $LNG['se_activity']			=	'Letzte Aktivit&auml;t';
 $LNG['se_ban']				=	'Sperren';
@@ -1205,5 +1208,36 @@ $LNG['log_chatsettings']				= 'Chat-Optionen';
 $LNG['log_tssettings']					= 'Teamspeak-Konfiguration';
 $LNG['log_uni_short']					= 'Uni';
 $LNG['log_universe']					= 'Universum';
+
+// Old SupportTicket Keys
+
+$LNG['supp_header'] 						= 'Support-System';
+$LNG['supp_header_g'] 						= 'Geschlossende Tickets';
+$LNG['ticket_id'] 							= '#Ticket-ID';
+$LNG['subject'] 							= 'Betreff';
+$LNG['status'] 								= 'Status';
+$LNG['ticket_posted'] 						= 'Ticket vom';
+$LNG['ticket_new'] 							= 'Neues Ticket erstellen';
+$LNG['input_text']	 						= 'Beschreibung:';
+$LNG['answer_new'] 							= 'Eine Antwort schreiben:';
+$LNG['text'] 								= 'Details';
+$LNG['message_a'] 							= 'Status der Nachricht:';
+$LNG['sendit_a'] 							= 'Nachricht wurde eingefügt.';
+$LNG['message_t'] 							= 'Status des Tickets:';
+$LNG['supp_send'] 							= 'Absenden';
+$LNG['sendit_t'] 							= 'Ticket wurde eingetragen.';
+$LNG['close_t'] 							= 'Ticket wurde geschlossen.';
+$LNG['sendit_error'] 						= 'Fehler:';
+$LNG['sendit_error_msg'] 					= 'Du hast vergessen etwas einzutragen!';
+$LNG['supp_admin_system'] 					= 'Support-Adminpanel';
+$LNG['close_ticket'] 						= 'Ticket schließen';
+$LNG['open_ticket'] 						= 'Ticket öffnen';
+$LNG['player'] 								= 'Spielernamen';
+$LNG['supp_ticket_close']					= 'Ticket geschlossen';
+$LNG['supp_close'] 							= 'Geschlossen';
+$LNG['supp_open'] 							= 'Offen';
+$LNG['supp_admin_answer'] 					= 'Admin-Antwort';
+$LNG['supp_player_write'] 					= '%s schreib am %s';
+$LNG['supp_player_answer'] 					= 'Spieler-Antwort';
 
 ?>

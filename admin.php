@@ -27,15 +27,14 @@
  * @link http://code.google.com/p/2moons/
  */
 
-define('INSIDE'  , true);
-define('IN_ADMIN', true);
+define('MODE', 'ADMIN');
 
 define('ROOT_PATH', str_replace('\\', '/',dirname(__FILE__)).'/');
 
 require(ROOT_PATH . 'includes/common.php');
 require_once(ROOT_PATH . 'includes/classes/class.Log.php');
 
-if ($USER['authlevel'] == AUTH_USR) redirectTo('game.php');
+if ($USER['authlevel'] == AUTH_USR) HTTP::redirectTo('game.php');
 
 if(!isset($_SESSION['admin_login']) || $_SESSION['admin_login'] != $USER['password'])
 {
@@ -44,8 +43,8 @@ if(!isset($_SESSION['admin_login']) || $_SESSION['admin_login'] != $USER['passwo
 	exit;
 }
 
-$page = request_var('page', '');
-$uni = request_var('uni', 0);
+$page = HTTP::_GP('page', '');
+$uni = HTTP::_GP('uni', 0);
 
 if($USER['authlevel'] == AUTH_ADM && !empty($uni))
 	$_SESSION['adminuni'] = $uni;
@@ -54,6 +53,10 @@ if(empty($_SESSION['adminuni']))
 
 switch($page)
 {
+	case 'logout':
+		include_once(ROOT_PATH . 'includes/pages/adm/ShowLogoutPage.php');
+		ShowLogoutPage();
+	break;
 	case 'infos':
 		include_once(ROOT_PATH . 'includes/pages/adm/ShowInformationPage.php');
 		ShowInformationPage();
@@ -128,7 +131,7 @@ switch($page)
 	break;
 	case 'support':
 		include_once(ROOT_PATH . 'includes/pages/adm/ShowSupportPage.php');
-		ShowSupportPage();
+		new ShowSupportPage();
 	break;
 	case 'password':
 		include_once(ROOT_PATH . 'includes/pages/adm/ShowPassEncripterPage.php');

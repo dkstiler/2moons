@@ -33,6 +33,7 @@ $LNG['server_infos']			= array(
 $LNG['login_error_1']		= 'Falscher Benutzername/Passwort!';
 $LNG['login_error_2']		= 'Jemand hat sich von einem anderem PC in deinem Account eingeloggt!';
 $LNG['login_error_3']		= 'Deine Session ist abgelaufen!';
+$LNG['login_error_4']		= 'Es gab einen Fehler bei der externen Autorisierung, bitte versuche Sie es später noch einmal!';
 $LNG['screenshots']			= 'Screenshots';
 $LNG['universe']			= 'Universum';
 $LNG['chose_a_uni']			= 'Wähle ein Universum';
@@ -65,11 +66,9 @@ $LNG['reg_mail_reg_done']			= 'Willkommen bei %s!';
 $LNG['invalid_mail_adress']			= 'Ungültige E-mail Adresse!';
 $LNG['empty_user_field']			= 'Sie müssen einen Usernamen eingeben!';
 $LNG['password_lenght_error']		= 'Das Passwort muss mindestens 6 Zeichen lang sein!';
-$LNG['user_field_no_alphanumeric']	= 'Bitte beim Usernamen nur alphanumerische Zeichen eingeben!';
-$LNG['user_field_no_space']			= 'Bitte beim Usernamen keine Leerzeichen eingeben!';
+$LNG['user_field_specialchar']		= 'Im Username sind nur Zahlen, Buchstaben, Leerzeichen, _, -, . erlaubt!';
 $LNG['planet_field_no']				= 'Sie müssen einen Planetennamen eingeben!';
-$LNG['planet_field_no_alphanumeric']	= 'Bitte beim Planetennamen nur alphanumerische Zeichen eingeben!';
-$LNG['planet_field_no_space']		= 'Bitte beim Planetennamen keine Leerzeichen eingeben!';
+$LNG['planet_field_specialchar']	= 'Im Planetennamen sind nur Zahlen, Buchstaben, Leerzeichen, _, -, . erlaubt!';
 $LNG['terms_and_conditions']		= 'Sie müssen die Regeln akzeptieren!';
 $LNG['user_already_exists']			= 'Der Username ist bereits vergeben!';
 $LNG['mail_already_exists']			= 'Die E-mail Adresse ist bereits in Benutzung!';
@@ -98,7 +97,6 @@ $LNG['lang_reg']					= 'Sprache';
 $LNG['register_now']				= 'Registrieren!';
 $LNG['captcha_reg']					= 'Sicherheitsfrage';
 $LNG['accept_terms_and_conditions']	= 'Ich bin mit den <a href="index.php?page=rules">Regeln</a> einverstanden.';
-$LNG['captcha_reload']				= 'Neuladen';
 $LNG['captcha_help']				= 'Hilfe';
 $LNG['captcha_get_image']			= 'Lade Bild-CAPTCHA';
 $LNG['captcha_reload']				= 'Neues CAPTCHA';
@@ -109,10 +107,6 @@ $LNG['user_active']					= 'User %s wurde aktiviert!';
 $LNG['rules_overview']				= "Regelwerk";
 $LNG['rules_info1']					= "Es wird aber im <a href=\"%s\" target=\"_blank\">Forum</a> und über die Startseite im Game darüber Informiert ...";
 
-
-//Facebook Connect
-
-$LNG['fb_perm']						= 'Du hast ein Zugriff verboten. %s braucht alle Rechte, damit du dich mit deinem Facebook Account einloggen kannst.\nAlternativ kannst du dich ohne Facebook-Account anmelden!';
 
 //NEWS
 

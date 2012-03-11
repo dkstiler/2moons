@@ -49,6 +49,7 @@ class Theme
 			
 		$this->skin		= $Theme;
 		$this->parseStyleCFG();
+		$this->setStyleSettings();
 	}
 		
 	function getTheme() {
@@ -74,6 +75,23 @@ class Theme
 		require(ROOT_PATH.'styles/theme/'.$this->skin.'/style.cfg');
 		$this->skininfo		= $Skin;
 		$this->customtpls	= (array) $Skin['templates'];	
+	}
+	
+	function setStyleSettings() {
+		if(file_exists(ROOT_PATH.'styles/theme/'.$this->skin.'/settings.cfg')) {
+			require(ROOT_PATH.'styles/theme/'.$this->skin.'/settings.cfg');
+		}
+		
+		$this->THEMESETTINGS	= array_merge(array(
+			'PLANET_ROWS_ON_OVERVIEW' => 2,
+			'SHORTCUT_ROWS_ON_FLEET1' => 2,
+			'COLONY_ROWS_ON_FLEET1' => 2,
+			'ACS_ROWS_ON_FLEET1' => 1,
+		), $THEMESETTINGS);
+	}
+	
+	function getStyleSettings() {
+		return $this->THEMESETTINGS;
 	}
 	
 	static function getAvalibleSkins() {

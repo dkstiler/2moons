@@ -30,7 +30,7 @@
 function calculateSteal($attackFleets, $defenderPlanet, $ForSim = false)
 {	
 	//Steal-Math by Slaver for 2Moons(http://www.2moons.cc) based on http://www.owiki.de/Beute
-	global $pricelist, $db;
+	global $pricelist;
 	
 	$SortFleets 	= array();
 	$Sumcapacity  	= 0;
@@ -89,7 +89,7 @@ function calculateSteal($attackFleets, $defenderPlanet, $ForSim = false)
 		$Qry .= "WHERE fleet_id = '".$FleetID."';";		
 	}
 	
-	$db->multi_query($Qry);
+	$GLOBALS['DATABASE']->multi_query($Qry);
 	return $booty;
 }
 	

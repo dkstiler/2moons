@@ -29,7 +29,7 @@
 
 function CreateOnePlanetRecord($Galaxy, $System, $Position, $Universe, $PlanetOwnerID, $PlanetName = '', $HomeWorld = false, $AuthLevel = 0)
 {
-	global $LNG, $db;
+	global $LNG;
 
 	$CONF	= getConfig($Universe);
 
@@ -58,9 +58,9 @@ function CreateOnePlanetRecord($Galaxy, $System, $Position, $Universe, $PlanetOw
 	$Types				= array_keys($PlanetData[$Pos]['image']);
 	$Type				= $Types[array_rand($Types)];
 	$Class				= $Type.'planet'.($PlanetData[$Pos]['image'][$Type] < 10 ? '0' : '').$PlanetData[$Pos]['image'][$Type];
-	$Name				= !empty($PlanetName) ? $db->sql_escape($PlanetName) : $LNG['type_planet'][1];
+	$Name				= !empty($PlanetName) ? $GLOBALS['DATABASE']->sql_escape($PlanetName) : $LNG['type_planet'][1];
 	
-	$db->query("INSERT INTO ".PLANETS." SET
+	$GLOBALS['DATABASE']->query("INSERT INTO ".PLANETS." SET
 				name = '".$Name."',
 				universe = ".$Universe.",
 				id_owner = ".$PlanetOwnerID.",
@@ -81,6 +81,6 @@ function CreateOnePlanetRecord($Galaxy, $System, $Position, $Universe, $PlanetOw
 				deuterium = ".$CONF['deuterium_start'].",
 				deuterium_perhour = ".$CONF['deuterium_basic_income'].";");
 
-	return $db->GetInsertID();
+	return $GLOBALS['DATABASE']->GetInsertID();
 }
 ?>

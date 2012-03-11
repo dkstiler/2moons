@@ -102,16 +102,6 @@ function Submit(action) {
 	return false;
 }
 
-function init(){
-	initFormHandler();
-	initLangs();
-	initCloseReg();
-	if(CONF['FBActive'] == 1 && document.location.search == '?fb=reg')
-		FBRegister();
-	else if(CONF['ref_active'] == 1 && document.location.search.search('/?ref=') !== -1)
-		RefRegister();
-}
-
 function initFormHandler() {
 	$('input:not(:button)').each(function(i, val){
 		$(this).keydown(function(event) {
@@ -149,67 +139,64 @@ function RefRegister() {
 
 
 function FBinit() {
-	FB.init({appId: CONF['FBKey'], status: false, cookie: true});
+    FB.init({
+		appId      : CONF['FBKey'],
+		status     : false,
+		cookie     : true,
+		xfbml      : false
+    });
+	
+	if(document.location.search == '?extauth=facebook') {
+		FBlogin();
+	}
 }
-
 function FBlogin() {
 	FBUniverse	= $('#universe').val();
 	FB.getLoginStatus(function(response) {
-		if (response.session) {
-			FBCheckRegister(response.session.uid);
+		if (response.status === 'connected') {
+			FBCheckIfKnownUser();
 		} else {
-			FB.login(function(login) {
-				if (login.session && login.perms) {
-					FBCheckUser();
+			FB.login(function(response) {
+				if (response.authResponse) {
+					FBCheckIfKnownUser();
 				}
-			}, {perms:'read_stream,publish_stream,offline_access,email'});
+			}, {scope:'email'});
 		}
 	});
 }
 
-function FBCheckRegister(Data){
-	if(typeof Data === "undefined") {
-		FBgetUser(FBCheckRegister);
-		return;
-	} else if (typeof ID === "object") {
-		ID	= Data.id
-	} else {
-		ID	= Data;
-	}
-	
-	$.getJSON('?uni='+FBUniverse+'&page=reg&action=check&mode=fbid&value='+ID, function(data) {
+function FBCheckIfKnownUser() {
+	$.getJSON('?uni='+FBUniverse+'&page=reg&action=check&mode=fbid&value='+response.authResponse.userID, function(data) {
 		if(data.exists === true) {
-			document.location.href = '?uni='+FBUniverse+'&page=fblogin';
+			FBRediectToGame();
 		} else {
-			FBCheckUser();
+			FBRegUser();
 		}
 	});
 }
 
-function FBCheckUser(user) {
-	if(typeof user !== "object") {
-		FBgetUser(FBCheckUser);
-		return;
-	}
-	
-	FBUniverse	= $('#universe').val();
-	$.getJSON('?uni='+FBUniverse+'&page=reg&action=check&mode=email&value='+user.email, function(data) {
-		if(data.exists) {
-			document.location.href = '?uni='+FBUniverse+'&page=fblogin&mode=register';
-		} else {
-			if(user.locale.substr(0, 2) != CONF['lang'] && $.inArray(user.locale.substr(0, 2), CONF['avaLangs']) !== -1)
-				setLNG(user.locale.substr(0, 2), '?fb=reg');
-			else
-				FBRegister(user);
-		}
+function FBRediectToGame() {
+	document.location.href = '?uni='+FBUniverse+'&page=extauth&method=facebook';
+}
+
+function FBRegUser() {
+	FB.api('/me', function(response) {
+		FBUniverse	= $('#universe').val();
+		$.getJSON('?uni='+FBUniverse+'&page=reg&action=check&mode=email&value='+response.email, function(data) {
+			if(data.exists) {
+				document.location.href = '?uni='+FBUniverse+'&page=fblogin&mode=register';
+			} else {
+				if(response.locale.substr(0, 2) != CONF['lang'] && $.inArray(response.locale.substr(0, 2), CONF['avaLangs']) !== -1)
+					setLNG(response.locale.substr(0, 2), '?fb=reg');
+				else
+					FBRegister(response);
+			}
+		});
 	});
 }
 
 function FBRegister(data) {
-	if(typeof data !== "object") {
-		FBgetUser(FBRegister);
-		return;
-	}
+	console.log(data);
 	Content('register_fast');
 	$('.fb_login').remove();
 	$('#fb_id').val(data.id);
@@ -217,11 +204,14 @@ function FBRegister(data) {
 	$('#reg_email_2').val(data.email);
 }
 
-function FBgetUser(callback) {
-	FB.api('/me', callback);
-}
-
 $(function() {
+	initFormHandler();
+	initLangs();
+	initCloseReg();
+	if(CONF['ref_active'] == 1 && document.location.search.search('/?ref=') !== -1) {
+		RefRegister();
+	}
+	
 	if(CONF.htaccess) {
 		$('select[name=uni]').each(function() {
 			var $this	= $(this);

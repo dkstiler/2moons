@@ -30,8 +30,8 @@
 class CustomAJAXChat extends AJAXChat {
 
 	function initCustomConfig() {
-		global $db, $CONF;
-		$this->setConfig('dbConnection', 'link', $db);
+		global $CONF;
+		$this->setConfig('dbConnection', 'link', $GLOBALS['DATABASE']);
 		$this->setConfig('socketServerEnabled', false, (bool)$CONF['chat_socket_active']);
 		$this->setConfig('socketServerHost', false, empty($CONF['chat_socket_host']) ? NULL : $CONF['chat_socket_host']);
 		$this->setConfig('socketServerIP', false, $CONF['chat_socket_ip']);
@@ -51,11 +51,7 @@ class CustomAJAXChat extends AJAXChat {
 
 	function initCustomRequestVars() {
 		$this->setRequestVar('login', true);
-		$this->setRequestVar('chat_type', isset($_REQUEST['chat_type']) ? $_REQUEST['chat_type'] : '');
-		
-		if($this->getRequestVar('chat_type') == 'ally' && $_SESSION['USER']['ally_request'] == 0) {
-			$this->setConfig('defaultChannelID', false, $_SESSION['USER']['ally_id']);
-		}
+		$this->setRequestVar('action', isset($_REQUEST['action']) ? $_REQUEST['action'] : '');
 	}
 
 	function revalidateUserID() {
@@ -68,17 +64,20 @@ class CustomAJAXChat extends AJAXChat {
 	}
 
 	function getValidLoginUserData() {
-		global $auth,$user;
+		global $auth, $user;
 		
 		// Return false if given user is a bot:
 		if(!isset($_SESSION)) {
 			return false;
 		}
 		
+		$allyData = $this->db->sqlQuery("SELECT ally_id FROM ".USERS." WHERE id = ".$_SESSION['id']." AND id NOT IN (SELECT userid FROM ".ALLIANCE_REQUEST.");")->fetch();
+		
 		$userData = array();
 		$userData['userID'] = $_SESSION['id'];
 
 		$userData['userName'] = $this->trimUserName($_SESSION['username']);
+		$userData['userAlly'] = $allyData['ally_id'];
 		
 		if($_SESSION['authlevel'] == AUTH_ADM)
 			$userData['userRole'] = AJAX_CHAT_ADMIN;
@@ -86,7 +85,11 @@ class CustomAJAXChat extends AJAXChat {
 			$userData['userRole'] = AJAX_CHAT_MODERATOR;
 		else
 			$userData['userRole'] = AJAX_CHAT_USER;
-
+		
+		if($this->getRequestVar('action') == 'alliance') {
+			$this->setConfig('defaultChannelID', false, $userData['userAlly']);
+		}
+			
 		return $userData;
 	}
 
@@ -107,7 +110,7 @@ class CustomAJAXChat extends AJAXChat {
 				}
 
 				// Add the valid channels to the channel list (the defaultChannelID is always valid):
-				if($value == $this->getConfig('defaultChannelID') || $_SESSION['USER']['ally_id'] == $value) {
+				if($value == $this->getConfig('defaultChannelID') || $this->getUserRole() == AJAX_CHAT_ADMIN) {
 					$this->_channels[$key] = $value;
 				}
 			}
@@ -119,23 +122,20 @@ class CustomAJAXChat extends AJAXChat {
 	// Make sure channel names don't contain any whitespace
 	function getAllChannels() {
 		if($this->_allChannels === null) {
-			global $db;
-
 			$this->_allChannels = array();
-			$result = $db->query("SELECT `id`, `ally_name` FROM ".ALLIANCE.";");
+			$result = $this->db->sqlQuery("SELECT `id`, `ally_name` FROM ".ALLIANCE.";");
 
 			$defaultChannelFound = false;
 
-			while ($row = $db->fetch_array($result)) {
+			while($row = $result->fetch()) {
 				$this->_allChannels[$this->trimChannelName($row['ally_name'])] = $row['id'];
 				if($this->getConfig('defaultChannelID') == $row['id'])
 					$this->setConfig('defaultChannelName', false, $this->trimChannelName($row['ally_name']));
 					
-				if(!$defaultChannelFound && $this->getRequestVar('chat_type') == 'ally' && $row['id'] == $_SESSION['USER']['ally_id']) {
+				if(!$defaultChannelFound && $this->getRequestVar('action') == 'alliance' && $row['id'] == $this->getConfig('defaultChannelID')) {
 					$defaultChannelFound = true;
 				}
 			}
-			$db->free_result($result);
 
 			if(!$defaultChannelFound) {
 				// Add the default channel as first array element to the channel list:

@@ -31,13 +31,25 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowInformationPage()
 {
-	global $db, $LNG, $CONF, $USER;
+	global $LNG, $CONF, $USER;
 
 	if(file_exists(ini_get('error_log')))
 		$Lines	= count(file(ini_get('error_log')));
 	else
 		$Lines	= 0;
-		
+	
+	try {
+		$dateTimeZoneServer = new DateTimeZone($CONF['timezone']);
+		$dateTimeZoneUser	= new DateTimeZone($USER['timezone']);
+	} catch (Exception $e) {
+		$dateTimeZoneServer	= null;
+		$dateTimeZoneUser	= null;
+	}
+	
+	$dateTimeServer		= new DateTime("now", $dateTimeZoneServer);
+	$dateTimeUser		= new DateTime("now", $dateTimeZoneUser);
+	$dateTimePHP		= new DateTime("now");
+	
 	$template	= new template();
 	$template->assign_vars(array(
 		'info_information'	=> sprintf($LNG['info_information'], 'http://dev.2moons.cc/bugtracker'),
@@ -45,8 +57,8 @@ function ShowInformationPage()
 		'vPHP'				=> PHP_VERSION,
 		'vAPI'				=> PHP_SAPI,
 		'vGame'				=> $CONF['VERSION'],
-		'vMySQLc'			=> $db->getVersion(),
-		'vMySQLs'			=> $db->getServerVersion(),
+		'vMySQLc'			=> $GLOBALS['DATABASE']->getVersion(),
+		'vMySQLs'			=> $GLOBALS['DATABASE']->getServerVersion(),
 		'root'				=> $_SERVER['SERVER_NAME'],
 		'gameroot'			=> $_SERVER['SERVER_NAME'].str_replace('/admin.php', '', $_SERVER['PHP_SELF']),
 		'json'				=> function_exists('json_encode') ? 'Ja' : 'Nein',
@@ -59,9 +71,9 @@ function ShowInformationPage()
 		'log_errors'		=> ini_get('log_errors') ? 'Aktiv' : 'Inaktiv',
 		'errorlog'			=> ini_get('error_log'),
 		'errorloglines'		=> $Lines,
-		'php_tz'			=> sprintf("%01.2f", date("O") / 100),
-		'conf_tz'			=> $CONF['timezone'],
-		'user_tz'			=> $USER['timezone'],
+		'php_tz'			=> $dateTimePHP->getOffset() / 3600,
+		'conf_tz'			=> $dateTimeServer->getOffset() / 3600,
+		'user_tz'			=> $dateTimeUser->getOffset() / 3600,
 	));
 
 	$template->show('ShowInformationPage.tpl');

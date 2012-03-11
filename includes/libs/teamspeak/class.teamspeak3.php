@@ -3,11 +3,11 @@
  *                            ts3admin.class.php                    <br />
  *                            ------------------                    <br />
  *   begin                : 18. December 2009                       <br />
- *   copyright            : (C) 2009-2011 Par0nid Solutions         <br />
+ *   copyright            : (C) 2009-2012 Par0noid Solutions         <br />
  *   email                : par0noid@gmx.de                         <br />
- *   version              : 0.6.2                                   <br />
- *   last modified        : 29. June 2011                           <br />
- *   build                : 5130002                                 <br />
+ *   version              : 0.6.4                                   <br />
+ *   last modified        : 10. January 2012                      <br />
+ *   build                : 5130124                                 <br />
  *
 
     This file is a powerful library for querying TeamSpeak3 servers.<br />																			
@@ -30,8 +30,8 @@
 /**
  * @author      Par0noid Solutions <par0noid@gmx.de>
  * @package     ts3admin
- * @version     0.6.2
- * @copyright   Copyright (c) 2009-2011, Stefan Z.
+ * @version     0.6.4
+ * @copyright   Copyright (c) 2009-2012, Stefan Z.
  * @link        http://ts3admin.info
  * @link        http://par0noid.info
  */
@@ -2103,34 +2103,38 @@ class ts3admin {
 	}
 
 /**
-  * logView displays a specified number of entries from the servers log<br><br><br>
+  * logView Displays a specified number of entries from the servers log. If instance is set to 1, the server will return lines from the master logfile (ts3server_0.log) instead of the selected virtual server logfile<br><br><br>
   * 
   * <b>Output:</b><br>
   * <code>
   * Array
   * {
-  *  [timestamp] => 1286147873
-  *  [level] => 4
-  *  [channel] => ServerParser
-  *  [msg] => deleted VirtualServer(2)
+  *  [last_pos] => 0
+  *  [file_size] => 1085
+  *  [l] => 2012-01-10 20:34:31.379260|INFO    |ServerLibPriv |   | TeamSpeak 3 Server 3.0.1 (2011-11-17 07:34:30)
+  * }
+  * {
+  *  [l] => 2012-01-10 20:34:31.380260|INFO    |DatabaseQuery |   | dbPlugin name:    SQLite3 plugin, Version 2, (c)TeamSpeak Systems GmbH
+  * }
+  * {
+  *  [l] => 2012-01-10 20:34:31.380260|INFO    |DatabaseQuery |   | dbPlugin version: 3.7.3
   * }
   * </code>
   *
   * @author     Par0noid Solutions
   * @access		public
-  * @param		integer	$limit	between 1 and 500
-  * @param		string	$comparator	{<|>|=} [optional]
-  * @param		string	$timestamp	YYYY-MM-DD\shh:mm:ss [optional]
+  * @param		integer	$lines	between 1 and 100
+  * @param		integer	$reverse	{1|0} [optional]
+  * @param		integer	$instance	{1|0} [optional]
+  * @param		integer	$begin_pos	{1|0} [optional]
   * @return     multidimensional-array logEntries
   */
-	function logView($limit, $comparator = '', $timestamp = '') {
-		if(!empty($comparator)) { $comparator = ' comparator='.$this->escapeText($comparator); }
-		if(!empty($timestamp)) { $timestamp = ' timestamp='.$this->escapeText($timestamp); }
-		if($limit >=1 and $limit <=500) {
-			return $this->getData('multi', 'logview limitcount='.$limit.$comparator.$timestamp);
+	function logView($lines, $reverse = 0, $instance = 0, $begin_pos = 0) {		
+		if($lines >=1 and $lines <=100) {
+			return $this->getData('multi', 'logview lines='.$lines.' reverse='.($reverse == 0 ? '0' : '1').' instance='.($instance == 0 ? '0' : '1').' begin_pos='.($begin_pos == 0 ? '0' : '1'));
 		}else{
-			$this->addDebugLog('please choose a limit between 1 and 500');
-			$this->generateOutput(false, array('Error: please choose a limit between 1 and 500'), false);
+			$this->addDebugLog('please choose a limit between 1 and 100');
+			$this->generateOutput(false, array('Error: please choose a limit between 1 and 100'), false);
 		}
 	}
 
@@ -2977,10 +2981,11 @@ class ts3admin {
 		if(count($customFieldSet)) {
 			$settingsString = array();
 		
-			foreach($data as $key => $value) {
+			foreach($customFieldSet as $key => $value) {
 				$settingsString[] = 'ident='.$this->escapeText($key).' value='.$this->escapeText($value);
 			}
-			$customFieldSet = ' '.implode('|', $settingsString);
+			
+			$customFieldSet = ' tokencustomset='.implode('|', $settingsString);
 		}else{
 			$customFieldSet = '';
 		}

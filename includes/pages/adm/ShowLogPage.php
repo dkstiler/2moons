@@ -29,9 +29,9 @@
 if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FILE__))) exit;
 function ShowLog()
 {
-	global $LNG, $db, $resources;
+	global $LNG, $resources;
 	
-	$table = request_var('type', '');
+	$table = HTTP::_GP('type', '');
 	
 	# Modes:
 	# 1 => Playerlist Changes
@@ -79,9 +79,9 @@ function ShowLogOverview() {
 }
 
 function ShowLogDetail() {
-	global $db, $LNG;
-	$logid = request_var('id', 0);
-	$result   	= $db->uniquequery("SELECT `l`.*, `u_a`.`username` as `admin_username` FROM ".LOG." as `l` INNER JOIN ".USERS." as `u_a` ON  `u_a`.`id` = `l`.`admin`  WHERE `l`.`id` = ".$logid."");
+	global $LNG;
+	$logid = HTTP::_GP('id', 0);
+	$result   	= $GLOBALS['DATABASE']->uniquequery("SELECT `l`.*, `u_a`.`username` as `admin_username` FROM ".LOG." as `l` INNER JOIN ".USERS." as `u_a` ON  `u_a`.`id` = `l`.`admin`  WHERE `l`.`id` = ".$logid."");
 	
 	$data = unserialize($result['data']);
 	$conf_before	= array();
@@ -135,6 +135,10 @@ function ShowLogDetail() {
 		'crystal'		=> $LNG['tech'][902],
 		'deuterium'		=> $LNG['tech'][903],
 		'darkmatter'	=> $LNG['tech'][921],
+		
+		'authattack'	=> $LNG['qe_authattack'],
+		'username'		=> $LNG['adm_username'],
+		'field_max'		=> $LNG['qe_fields'],
 	);
 	
 	foreach ($conf_before as $key => $val) {
@@ -152,8 +156,8 @@ function ShowLogDetail() {
 			
 			$LogArray[]	= array(
 				'Element'	=> $Element,
-				'old'		=> ($Element == 'urlaubs_until' ? tz_date($val) : (is_numeric($val) ? pretty_number($val) : $val)),
-				'new'		=> ($Element == 'urlaubs_until' ? tz_date($conf_after[$key]) : (is_numeric($conf_after[$key]) ? pretty_number($conf_after[$key]) : $conf_after[$key])),
+				'old'		=> ($Element == 'urlaubs_until' ? _date($LNG['php_tdformat'], $val) : (is_numeric($val) ? pretty_number($val) : $val)),
+				'new'		=> ($Element == 'urlaubs_until' ? _date($LNG['php_tdformat'], $conf_after[$key]) : (is_numeric($conf_after[$key]) ? pretty_number($conf_after[$key]) : $conf_after[$key])),
 			);
 		}
 	}
@@ -164,7 +168,7 @@ function ShowLogDetail() {
 		'admin'			=> $result['admin_username'],
 		'target'		=> $result['universe'],
 		'id'			=> $result['id'],
-		'time'			=> tz_date($result['time']),
+		'time'			=> _date($LNG['php_tdformat'], $result['time'], $USER['timezone']),
 		'log_info'		=> $LNG['log_info'],
 		'log_admin'		=> $LNG['log_admin'],
 		'log_time'		=> $LNG['log_time'],
@@ -178,25 +182,25 @@ function ShowLogDetail() {
 }
 
 function ShowLogSettingsList() {
-	global $db, $LNG;
-	$result    = $db->query("SELECT `l`.`id`,`l`.`admin`,`l`.`time`,`l`.`universe`,`l`.`target`,`u_a`.`username` as `admin_username` FROM ".LOG." as `l` INNER JOIN ".USERS." as `u_a` ON  `u_a`.`id` = `l`.`admin` WHERE mode = 3 ORDER BY `id` DESC");
+	global $LNG;
+	$result    = $GLOBALS['DATABASE']->query("SELECT `l`.`id`,`l`.`admin`,`l`.`time`,`l`.`universe`,`l`.`target`,`u_a`.`username` as `admin_username` FROM ".LOG." as `l` INNER JOIN ".USERS." as `u_a` ON  `u_a`.`id` = `l`.`admin` WHERE mode = 3 ORDER BY `id` DESC");
 
 	$template	= new template();	
 	if(!$result)
 		$template->message($LNG['log_no_data']);
 	
 	$targetkey = array(0 => $LNG['log_ssettings'], 1 => $LNG['log_usettings'], 2 => $LNG['log_statsettings'], 3 => $LNG['log_chatsettings'], 4 => $LNG['log_tssettings']);
-	while ($LogRow = $db->fetch_array($result))
+	while ($LogRow = $GLOBALS['DATABASE']->fetch_array($result))
 	{			
 		$LogArray[]	= array(
 			'id'			=> $LogRow['id'],
 			'admin'			=> $LogRow['admin_username'],
 			'target_uni'	=> ($LogRow['target'] == 0 ? '' : $LogRow['universe']),
 			'target'		=> $targetkey[$LogRow['target']],
-			'time'			=> tz_date($LogRow['time']),
+			'time'			=> _date($LNG['php_tdformat'], $LogRow['time'], $USER['timezone']),
 		);
 	}
-	$db->free_result($result);
+	$GLOBALS['DATABASE']->free_result($result);
 	$template->assign_vars(array(	
 		'LogArray'				=> $LogArray,
 		'log_log'		=> $LNG['log_log'],
@@ -211,25 +215,25 @@ function ShowLogSettingsList() {
 }
 
 function ShowLogPlanetsList() {
-	global $db, $LNG;
+	global $LNG;
 
-	$result    = $db->query("SELECT DISTINCT `l`.`id`,`l`.`admin`,`l`.`target`,`l`.`time`,`l`.`universe`,`u_t`.`username` as `target_username`, `p`.`galaxy` as `target_galaxy`, `p`.`system` as `target_system`, `p`.`planet` as `target_planet`,`u_a`.`username` as `admin_username` FROM ".LOG." as `l` INNER JOIN ".USERS." as `u_a` ON  `u_a`.`id` = `l`.`admin` INNER JOIN ".PLANETS." as `p` ON `p`.`id` = `l`.`target` INNER JOIN ".USERS." as `u_t` ON `u_t`.`id` = `p`.`id_owner` WHERE mode = 2 OR mode = 4 OR mode = 5 ORDER BY `id` DESC");
+	$result    = $GLOBALS['DATABASE']->query("SELECT DISTINCT `l`.`id`,`l`.`admin`,`l`.`target`,`l`.`time`,`l`.`universe`,`u_t`.`username` as `target_username`, `p`.`galaxy` as `target_galaxy`, `p`.`system` as `target_system`, `p`.`planet` as `target_planet`,`u_a`.`username` as `admin_username` FROM ".LOG." as `l` INNER JOIN ".USERS." as `u_a` ON  `u_a`.`id` = `l`.`admin` INNER JOIN ".PLANETS." as `p` ON `p`.`id` = `l`.`target` INNER JOIN ".USERS." as `u_t` ON `u_t`.`id` = `p`.`id_owner` WHERE mode = 2 OR mode = 4 OR mode = 5 ORDER BY `id` DESC");
 
 	$template	= new template();	
 	if(!$result)
 		$template->message($LNG['log_no_data']);
 		
-	while ($LogRow = $db->fetch_array($result))
+	while ($LogRow = $GLOBALS['DATABASE']->fetch_array($result))
 	{			
 		$LogArray[]	= array(
 			'id'		=> $LogRow['id'],
 			'admin'		=> $LogRow['admin_username'],
 			'target_uni'=> $LogRow['universe'],
 			'target'	=> '['.$LogRow['target_galaxy'].':'.$LogRow['target_system'].':'.$LogRow['target_planet'].'] -> '.$LogRow['target_username'],
-			'time'		=> tz_date($LogRow['time']),
+			'time'		=> _date($LNG['php_tdformat'], $LogRow['time'], $USER['timezone']),
 		);
 	}
-	$db->free_result($result);
+	$GLOBALS['DATABASE']->free_result($result);
 	$template	= new template();	
 	$template->assign_vars(array(	
 		'LogArray'		=> $LogArray,
@@ -245,25 +249,25 @@ function ShowLogPlanetsList() {
 }
 
 function ShowLogPlayersList() {
-	global $db, $LNG;
+	global $LNG;
 
-	$result    = $db->query("SELECT DISTINCT `l`.`id`,`l`.`admin`,`l`.`target`,`l`.`time`,`l`.`universe`,`u_t`.`username` as `target_username`,`u_a`.`username` as `admin_username` FROM ".LOG." as `l` INNER JOIN ".USERS." as `u_a` ON  `u_a`.`id` = `l`.`admin` INNER JOIN ".USERS." as `u_t` ON `u_t`.`id` = `l`.`target` WHERE `mode` = 1 ORDER BY `l`.`id` DESC");
+	$result    = $GLOBALS['DATABASE']->query("SELECT DISTINCT `l`.`id`,`l`.`admin`,`l`.`target`,`l`.`time`,`l`.`universe`,`u_t`.`username` as `target_username`,`u_a`.`username` as `admin_username` FROM ".LOG." as `l` INNER JOIN ".USERS." as `u_a` ON  `u_a`.`id` = `l`.`admin` INNER JOIN ".USERS." as `u_t` ON `u_t`.`id` = `l`.`target` WHERE `mode` = 1 ORDER BY `l`.`id` DESC");
 
 	$template	= new template();	
 	if(!$result)
 		$template->message($LNG['log_no_data']);
 		
-	while ($LogRow = $db->fetch_array($result))
+	while ($LogRow = $GLOBALS['DATABASE']->fetch_array($result))
 	{			
 		$LogArray[]	= array(
 			'id'		=> $LogRow['id'],
 			'admin'		=> $LogRow['admin_username'],
 			'target_uni'=> $LogRow['universe'],
 			'target'	=> $LogRow['target_username'],
-			'time'		=> tz_date($LogRow['time']),
+			'time'		=> _date($LNG['php_tdformat'], $LogRow['time'], $USER['timezone']),
 		);
 	}
-	$db->free_result($result);
+	$GLOBALS['DATABASE']->free_result($result);
 	$template->assign_vars(array(	
 		'LogArray'		=> $LogArray,
 		'log_log'		=> $LNG['log_log'],

@@ -30,35 +30,36 @@
 if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FILE__))) exit;
 
 function ShowNewsPage(){
-	global $LNG, $db, $USER;
+	global $LNG, $USER;
 
 	if($_GET['action'] == 'send') {
-		$edit_id 	= request_var('id', 0);
-		$title 		= $db->sql_escape(request_var('title', '', true));
-		$text 		= $db->sql_escape(request_var('text', '', true));
+		$edit_id 	= HTTP::_GP('id', 0);
+		$title 		= $GLOBALS['DATABASE']->sql_escape(HTTP::_GP('title', '', true));
+		$text 		= $GLOBALS['DATABASE']->sql_escape(HTTP::_GP('text', '', true));
 		$query		= ($_GET['mode'] == 2) ? "INSERT INTO ".NEWS." (`id` ,`user` ,`date` ,`title` ,`text`) VALUES ( NULL , '".$USER['username']."', '".TIMESTAMP."', '".$title."', '".$text."');" : "UPDATE ".NEWS." SET `title` = '".$title."', `text` = '".$text."', `date` = '".TIMESTAMP."' WHERE `id` = '".$edit_id."' LIMIT 1;";
 		
-		$db->query($query);
+		$GLOBALS['DATABASE']->query($query);
 	} elseif($_GET['action'] == 'delete' && isset($_GET['id'])) {
-		$db->query("DELETE FROM ".NEWS." WHERE `id` = '".request_var('id', 0)."';");
+		$GLOBALS['DATABASE']->query("DELETE FROM ".NEWS." WHERE `id` = '".HTTP::_GP('id', 0)."';");
 	}
 
-	$query = $db->query("SELECT * FROM ".NEWS." ORDER BY id ASC");
+	$query = $GLOBALS['DATABASE']->query("SELECT * FROM ".NEWS." ORDER BY id ASC");
 
-	while ($u = $db->fetch_array($query)) {
+	while ($u = $GLOBALS['DATABASE']->fetch_array($query)) {
 		$NewsList[]	= array(
 			'id'		=> $u['id'],
 			'title'		=> $u['title'],
-			'date'		=> tz_date($u['date']),
+			'date'		=> _date($LNG['php_tdformat'], $u['date'], $USER['timezone']),
 			'user'		=> $u['user'],
 			'confirm'	=> sprintf($LNG['nws_confirm'], $u['title']),
 		);
 	}
 	
-	$template	= new template();
+	$template	= new template();
+
 
 	if($_GET['action'] == 'edit' && isset($_GET['id'])) {
-		$News = $db->uniquequery("SELECT id, title, text FROM ".NEWS." WHERE id = '".$db->sql_escape($_GET['id'])."';");
+		$News = $GLOBALS['DATABASE']->uniquequery("SELECT id, title, text FROM ".NEWS." WHERE id = '".$GLOBALS['DATABASE']->sql_escape($_GET['id'])."';");
 		$template->assign_vars(array(	
 			'mode'			=> 1,
 			'nws_head'		=> sprintf($LNG['nws_head_edit'], $News['title']),

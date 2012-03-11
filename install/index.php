@@ -30,12 +30,12 @@
 if(!function_exists('spl_autoload_register'))
 	exit("PHP is missing <a href=\"http://php.net/spl\">Standard PHP Library (SPL)</a> support");
 
-define('INSTALL', true);
+define('MODE', 'INSTALL');
+
 define('ROOT_PATH', str_replace('\\', '/', dirname(dirname(__FILE__))).'/');
 
 ignore_user_abort(true);
 error_reporting(E_ALL ^ E_NOTICE);
-header('Content-Type: text/html; charset=UTF-8');
 define('TIMESTAMP',	$_SERVER['REQUEST_TIME']);
 
 define('PROTOCOL', (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"]  == 'on') ? 'https://' : 'http://');
@@ -48,6 +48,8 @@ set_exception_handler('exception_handler');
 require_once(ROOT_PATH . 'includes/classes/class.Lang.php');
 require_once(ROOT_PATH . 'includes/classes/class.theme.php');
 require_once(ROOT_PATH . 'includes/classes/class.template.php');
+require_once(ROOT_PATH . 'includes/classes/HTTP.class.php');
+HTTP::sendHeader('Content-Type', 'text/html; charset=UTF-8');
 
 $THEME	= new Theme();	
 $THEME->setUserTheme('gow');
@@ -76,12 +78,12 @@ if(!file_exists(ROOT_PATH.'includes/ENABLE_INSTALL_TOOL')) {
 	exit;
 }
 
-$Language	= request_var('lang', '');
+$Language	= HTTP::_GP('lang', '');
 if(!empty($Language) && in_array($Language, $LANG->getAllowedLangs())) {
 	setcookie('lang', $Language);
 }
 
-$step	  = request_var('step', 0);
+$step	  = HTTP::_GP('step', 0);
 
 if($Mode == 'ajax') {
 	require_once(ROOT_PATH.'includes/libs/ftp/ftp.class.php');
@@ -113,7 +115,7 @@ switch ($step) {
 	case 1:
 		if(isset($_POST['post'])) {
 			if(isset($_POST['accept'])) {
-				redirectTo('index.php?step=2');
+				HTTP::redirectTo('index.php?step=2');
 			} else {
 				$template->assign(array(
 					'accept'	=> false,
@@ -226,12 +228,12 @@ switch ($step) {
 		$template->show('ins_form.tpl');
 	break;
 	case 4:
-		$host	= request_var('host', '');
-		$port	= request_var('port', 3306);
-		$user	= request_var('user', '', true);
-		$userpw	= request_var('passwort', '', true);
-		$dbname	= request_var('dbname', '', true);
-		$prefix	= request_var('prefix', 'uni1_');
+		$host	= HTTP::_GP('host', '');
+		$port	= HTTP::_GP('port', 3306);
+		$user	= HTTP::_GP('user', '', true);
+		$userpw	= HTTP::_GP('passwort', '', true);
+		$dbname	= HTTP::_GP('dbname', '', true);
+		$prefix	= HTTP::_GP('prefix', 'uni1_');
 		
 		$template->assign(array(
 			'host'		=> $host,
@@ -286,10 +288,10 @@ switch ($step) {
 		$database['databasename']	= $dbname;
 		$database['tableprefix']	= $prefix;
 		
-		require_once(ROOT_PATH . 'includes/classes/class.MySQLi.php');
+		require_once(ROOT_PATH . 'includes/classes/class.Database.php');
 		
 		try {
-			$db = new Database();
+			$DATABASE = new Database();
 		} catch (Exception $e) {
 			$template->assign(array(
 				'class'		=> 'fatalerror',
@@ -300,7 +302,10 @@ switch ($step) {
 		}
 		
 		@touch(ROOT_PATH."includes/error.log");
-		file_put_contents(ROOT_PATH."includes/config.php", sprintf(file_get_contents(ROOT_PATH."includes/config.sample.php"), $host, $port, $user, $userpw, $dbname, $prefix));
+		
+		$blowfish	= substr(str_shuffle('./0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 22);
+		
+		file_put_contents(ROOT_PATH."includes/config.php", sprintf(file_get_contents(ROOT_PATH."includes/config.sample.php"), $host, $port, $user, $userpw, $dbname, $prefix, $blowfish));
 		$template->assign(array(
 			'class'		=> 'noerror',
 			'message'	=> $LNG['step2_db_done'],
@@ -314,10 +319,10 @@ switch ($step) {
 	case 6:
 		require_once(ROOT_PATH . 'includes/config.php');
 		require_once(ROOT_PATH . 'includes/dbtables.php');	
-		require_once(ROOT_PATH . 'includes/classes/class.MySQLi.php');
-		$db = new Database();
+		require_once(ROOT_PATH . 'includes/classes/class.Database.php');
+		$GLOBALS['DATABASE']	= new Database();
 		try {
-			$db->multi_query(str_replace("prefix_", $database['tableprefix'], file_get_contents('install.sql')));
+			$GLOBALS['DATABASE']->multi_query(str_replace("prefix_", $database['tableprefix'], file_get_contents('install.sql')));
 			$GLOBALS['CONF']	= array(
 				'timezone'			=> 0,
 				'lang'				=> '',
@@ -327,17 +332,17 @@ switch ($step) {
 			);
 			
 			update_config(array(
-				'timezone'			=> ((int) date("Z") / 3600) - (int) date("I"),
+				'timezone'			=> date_default_timezone_get(),
 				'lang'				=> $LANG->GetUser(),
 				'OverviewNewsText'	=> $LNG['sql_welcome'].'1.7',
 				'uni_name'			=> $LNG['sql_universe'].' 1',
 				'close_reason'		=> $LNG['sql_close_reason'],
 			), 1);
-			redirectTo('index.php?step=7');
+			HTTP::redirectTo('index.php?step=7');
 		} catch (Exception $e) {
 				$template->assign(array(
 				'class'		=> 'fatalerror',
-				'message'	=> $LNG['step3_db_error'].'</p><p>'.$db->error,
+				'message'	=> $LNG['step3_db_error'].'</p><p>'.$GLOBALS['DATABASE']->error,
 			));
 			$template->show('ins_step4.tpl');
 			exit;
@@ -347,10 +352,10 @@ switch ($step) {
 		$template->show('ins_acc.tpl');
 	break;
 	case 8:
-		$AdminUsername	= request_var('username', '', true);
-		$AdminPassword	= request_var('password', '', true);
-		$AdminMail		= request_var('email', '');
-		$MD5Password	= md5($AdminPassword);
+		$AdminUsername	= HTTP::_GP('username', '', true);
+		$AdminPassword	= HTTP::_GP('password', '', true);
+		$AdminMail		= HTTP::_GP('email', '');
+		$MD5Password	= cryptPassword($AdminPassword);
 		
 		$template->assign(array(
 			'username'	=> $AdminUsername,
@@ -367,8 +372,8 @@ switch ($step) {
 			
 		require_once(ROOT_PATH . 'includes/config.php');
 		require_once(ROOT_PATH . 'includes/dbtables.php');	
-		require_once(ROOT_PATH . 'includes/classes/class.MySQLi.php');
-		$db = new Database();
+		require_once(ROOT_PATH . 'includes/classes/class.Database.php');
+		$GLOBALS['DATABASE'] = new Database();
 						
 		$SQL  = "INSERT INTO ".USERS." SET ";
 		$SQL .= "`id`                = '1', ";
@@ -378,7 +383,7 @@ switch ($step) {
 		$SQL .= "`email_2`           = '".$AdminMail."', ";
 		$SQL .= "`ip_at_reg`         = '".$_SERVER['REMOTE_ADDR']. "', ";
 		$SQL .= "`lang` 	         = '".$LANG->GetUser(). "', ";
-		$SQL .= "`authlevel`         = '".AUTH_ADM."', ";
+		$SQL .= "`authlevel`         = ".AUTH_ADM.", ";
 		$SQL .= "`rights` 			 = '', ";
 		$SQL .= "`id_planet`         = 1, ";
 		$SQL .= "`universe`          = 1, ";
@@ -386,7 +391,7 @@ switch ($step) {
 		$SQL .= "`system`            = 1, ";
 		$SQL .= "`planet`            = 1, ";
 		$SQL .= "`register_time`     = ". TIMESTAMP .";";
-		$db->query($SQL);
+		$GLOBALS['DATABASE']->query($SQL);
 				
 		require_once(ROOT_PATH.'includes/functions/CreateOnePlanetRecord.php');
 		require_once(ROOT_PATH.'includes/classes/class.Session.php');

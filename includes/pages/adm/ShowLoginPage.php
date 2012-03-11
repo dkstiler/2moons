@@ -30,9 +30,15 @@
 function ShowLoginPage()
 {
 	global $USER, $LNG;
-	if(isset($_REQUEST['admin_pw']) && md5($_REQUEST['admin_pw']) == $USER['password']) {
-		$_SESSION['admin_login']	= md5($_REQUEST['admin_pw']);
-		redirectTo('admin.php');
+	
+	if(isset($_REQUEST['admin_pw']))
+	{
+		$password	= cryptPassword($_REQUEST['admin_pw']);
+
+		if ($password == $USER['password']) {
+			$_SESSION['admin_login']	= $password;
+			HTTP::redirectTo('admin.php');
+		}
 	}
 
 	$template	= new template();

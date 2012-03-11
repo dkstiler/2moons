@@ -31,7 +31,7 @@ if (!allowedTo(str_replace(array(dirname(__FILE__), '\\', '/', '.php'), '', __FI
 
 function ShowConfigBasicPage()
 {
-	global $CONF, $LNG, $USER, $LANG, $db;
+	global $CONF, $LNG, $USER, $LANG;
 	if (!empty($_POST))
 	{
 
@@ -67,26 +67,26 @@ function ShowConfigBasicPage()
 		$CONF['mail_active'] 			= isset($_POST['mail_active']) && $_POST['mail_active'] == 'on' ? 1 : 0;
 		
 		$CONF['OverviewNewsText']		= $_POST['NewsText'];
-		$CONF['ttf_file']				= request_var('ttf_file', '');
-		$CONF['close_reason']			= request_var('close_reason', '', true);
-		$CONF['game_name']				= request_var('game_name', '', true);
-		$CONF['capprivate']				= request_var('capprivate', '');
-		$CONF['cappublic']				= request_var('cappublic', '');
-		$CONF['ga_key']					= request_var('ga_key', '', true);
-		$CONF['mail_use']				= request_var('mail_use', 0);
-		$CONF['smail_path']				= request_var('smail_path', '');
-		$CONF['smtp_host']				= request_var('smtp_host', '', true);
-		$CONF['smtp_port']				= request_var('smtp_port', 0);
-		$CONF['smtp_user']				= request_var('smtp_user', '', true);
-		$CONF['smtp_sendmail']			= request_var('smtp_sendmail', '', true);
-		$CONF['smtp_pass']				= request_var('smtp_pass', '', true);
-		$CONF['smtp_ssl']				= request_var('smtp_ssl', '');
-		$CONF['del_oldstuff']			= request_var('del_oldstuff', 0);
-		$CONF['del_user_manually']		= request_var('del_user_manually', 0);
-		$CONF['del_user_automatic']		= request_var('del_user_automatic', 0);
-		$CONF['del_user_sendmail']		= request_var('del_user_sendmail', 0);
-		$CONF['timezone']				= request_var('timezone', 0.0);
-		$CONF['dst']					= request_var('dst', 0);
+		$CONF['ttf_file']				= HTTP::_GP('ttf_file', '');
+		$CONF['close_reason']			= HTTP::_GP('close_reason', '', true);
+		$CONF['game_name']				= HTTP::_GP('game_name', '', true);
+		$CONF['capprivate']				= HTTP::_GP('capprivate', '');
+		$CONF['cappublic']				= HTTP::_GP('cappublic', '');
+		$CONF['ga_key']					= HTTP::_GP('ga_key', '', true);
+		$CONF['mail_use']				= HTTP::_GP('mail_use', 0);
+		$CONF['smail_path']				= HTTP::_GP('smail_path', '');
+		$CONF['smtp_host']				= HTTP::_GP('smtp_host', '', true);
+		$CONF['smtp_port']				= HTTP::_GP('smtp_port', 0);
+		$CONF['smtp_user']				= HTTP::_GP('smtp_user', '', true);
+		$CONF['smtp_sendmail']			= HTTP::_GP('smtp_sendmail', '', true);
+		$CONF['smtp_pass']				= HTTP::_GP('smtp_pass', '', true);
+		$CONF['smtp_ssl']				= HTTP::_GP('smtp_ssl', '');
+		$CONF['del_oldstuff']			= HTTP::_GP('del_oldstuff', 0);
+		$CONF['del_user_manually']		= HTTP::_GP('del_user_manually', 0);
+		$CONF['del_user_automatic']		= HTTP::_GP('del_user_automatic', 0);
+		$CONF['del_user_sendmail']		= HTTP::_GP('del_user_sendmail', 0);
+		$CONF['timezone']				= HTTP::_GP('timezone', '');
+		$CONF['dst']					= HTTP::_GP('dst', 0);
 		
 		$config_after = array(
 			'ttf_file'				=> $CONF['ttf_file'],
@@ -124,7 +124,7 @@ function ShowConfigBasicPage()
 
 	}
 	
-	$TimeZones		= tz_getlist();
+	$TimeZones		= get_timezone_selector();
 	
 	$template	= new template();
 	
@@ -150,9 +150,9 @@ function ShowConfigBasicPage()
 		'capaktiv'      	           	=> $CONF['capaktiv'],
         'ga_active'               		=> $CONF['ga_active'],
 		'ga_key'           				=> $CONF['ga_key'],
-		'timezone'           			=> (float) $CONF['timezone'],
+		'timezone'           			=> $CONF['timezone'],
 		'dst'           				=> $CONF['dst'],
-		'Selector'						=> array('timezone_val' => $TimeZones, 'timezone_opt' => $LNG['timezones'], 'dst' => $LNG['se_dst_sel'], 'mail' => $LNG['se_mail_sel'], 'encry' => array('' => $LNG['se_smtp_ssl_1'], 'ssl' => $LNG['se_smtp_ssl_2'], 'tls' => $LNG['se_smtp_ssl_3'])),
+		'Selector'						=> array('timezone' => $TimeZones, 'mail' => $LNG['se_mail_sel'], 'encry' => array('' => $LNG['se_smtp_ssl_1'], 'ssl' => $LNG['se_smtp_ssl_2'], 'tls' => $LNG['se_smtp_ssl_3'])),
 	));
 	
 	$template->show('ConfigBasicBody.tpl');

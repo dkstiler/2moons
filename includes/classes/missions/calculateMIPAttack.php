@@ -27,50 +27,44 @@
  * @link http://code.google.com/p/2moons/
  */
 
-function calculateMIPAttack($TargetDefTech, $OwnerAttTech, $ipm, $TargetDefensive, $pri_target, $adm)
+function calculateMIPAttack($TargetDefTech, $OwnerAttTech, $missiles, $targetDefensive, $firstTarget, $defenseMissles)
 {
 	global $pricelist, $reslist, $CombatCaps;
-	// Based on http://websim.speedsim.net/ JS-IRak Simulation
-	unset($TargetDefensive[503]);
-	$GetTargetKeys	= array_keys($TargetDefensive);
+	/* Interplanetarraketen haben eine Grundangriffskraft von 12.000 und richten damit bei 
+	ausgeglichenem Technologielevel zwischen Angreifer und Verteidiger immer einen 
+	Schaden von Metall+Kristall = 120.000 an. Wieviel davon Metall bzw. Kristall ist 
+	fließt nicht in die Berechnung mit ein. Ebenso wenig, wie das Deuterium. */
 	
-	$life_fac		= $TargetDefTech / 10 + 1;
-	$life_fac_a 	= $CombatCaps[503]['attack'] * ($OwnerAttTech / 10 + 1);
+	// unset Missiles
+	unset($targetDefensive[503]);
 	
-	$ipm -= $adm;
-	$adm = 0;
-	$max_dam = $ipm * $life_fac_a;
-	$i = 0;	
-
-	$ship_res = array();
-	foreach($TargetDefensive as $Element => $Count)
+	$destroyShips		= array();
+	
+	// Attack / Defensive bonus
+	
+	$attackFactor		= 1 + $OwnerAttTech * 10 - $TargetDefTech * 10;
+	
+	// kill destroyed missiles
+	$totalAttack		= ($missiles - $defenseMissles) * $CombatCaps[503]['attack'] * $attackFactor * 10;
+	
+	$firstTargetData	= array($firstTarget => $targetDefensive[$firstTarget]);
+	unset($targetDefensive[$firstTarget]);
+	
+	$targetDefensive	= ($firstTargetData + array_diff_key($targetDefensive, $firstTargetData));
+	
+	foreach($targetDefensive as $element => $count)
 	{
-		if($i == 0)
-			$target = $pri_target;
-		elseif($Element <= $pri_target)
-			$target = $Element - 1;
-		else
-			$target = $Element;
+		$destroyCount	= floor($totalAttack / ($pricelist[$element]['cost'][901] + $pricelist[$element]['cost'][902]));
+		$destroyCount	= min($destroyCount, $count);
 		
+		$costAttack		= $destroyCount * ($pricelist[$element]['cost'][901] + $pricelist[$element]['cost'][902]);
 		
-		$Dam = $max_dam - ($pricelist[$target]['cost'][901] + $pricelist[$target]['cost'][902]) / 10 * $TargetDefensive[$target] * $life_fac;
-			
-		if($Dam > 0)
-		{
-			$dest = $TargetDefensive[$target];
-			$ship_res[$target] = $dest;
-		}
-		else
-		{
-			// not enough damage for all items
-			$dest = floor($max_dam / (($pricelist[$target]['cost'][901] + $pricelist[$target]['cost'][902]) / 10 * $life_fac));
-			$ship_res[$target] = $dest;
-		}
-		$max_dam -= $dest * round(($pricelist[$target]['cost'][901] + $pricelist[$target]['cost'][902]) / 10 * $life_fac);
-		$i++;
+		$totalAttack	-= $costAttack;
+		
+		$destroyShips[$element]	= $destroyCount;
 	}
 		
-	return $ship_res;
+	return $destroyShips;
 }
 	
 ?>

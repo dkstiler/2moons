@@ -1,13 +1,13 @@
 {extends file="index.tpl"}
-{block name="title" prepend}{$menu_top100}{/block}
+{block name="title" prepend}{$LNG.menu_top100}{/block}
 {block name="content"}
 <select onchange="changeUni($(this).val());">{html_options options=$AvailableUnis selected=$UNI}</select><br>
 <table>
 <tr>
-	<th style="color:lime">{$tkb_platz}</th>
-	<th style="color:lime">{$tkb_owners}</th>
-	<th style="color:lime">{$tkb_datum}</th>
-	<th style="color:lime">{$tkb_units}</th>
+	<th style="color:lime">{$LNG.tkb_platz}</th>
+	<th style="color:lime">{$LNG.tkb_owners}</th>
+	<th style="color:lime">{$LNG.tkb_datum}</th>
+	<th style="color:lime">{$LNG.tkb_units}</th>
 </tr>
 {foreach item=RowInfo key=RowNR from=$TopKBList}
 <tr>
